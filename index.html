@@ -1,0 +1,3197 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Живая 3D Книга-Панорама • Disney Pop-Up Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Alice&amp;family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&amp;family=Forum&amp;family=Marck+Script&amp;family=Ruslan+Display&amp;display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================================================
+           MODULE 1: CORE VARIABLES & PROPORTIONS
+           ========================================================================== */
+        :root {
+            --bg-dark: #0c0705;
+            --gold-primary: #f3c86b;
+            --gold-glow: rgba(243, 200, 107, 0.45);
+            --gold-dark: #9e7322;
+
+            /* Базовый размер одной страницы (разворот = 760x440) */
+            --page-width: 380px;
+            --page-height: 440px;
+            --page-extra-bottom: 0px;
+
+            /* 3D Углы: Книга наклонена на 54°, фигуры поднимаются на -56° */
+            --book-tilt-x: 54deg;
+            --standee-angle: -56deg;
+
+            /* Авто-масштаб под экран устройства */
+            --rig-scale: 1;
+            --rig-offset-y: 0px;
+            --pop-scale-boost: 1;
+
+            /* Динамические координаты панели текста вплотную к книге */
+            --reader-top: auto;
+            --reader-width: min(94vw, 720px);
+
+            /* Шрифты сказки (настраиваются в конструкторе) */
+            --font-heading: 'Ruslan Display', 'Forum', Georgia, serif;
+            --font-body: 'Alice', 'Cormorant Garamond', Georgia, serif;
+            --font-body-size: 16px;
+
+            /* Текстуры по умолчанию */
+            --room-tex: url('room.png');
+            --cover-tex: url('cover.png');
+            --paper-tex: url('paper.png');
+            --current-sky-tex: url('mountains.png');
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-dark);
+            font-family: var(--font-body);
+            color: #fdf6e2;
+        }
+
+        body.reader-only-mode .btn-toggle-builder,
+        body.reader-only-mode .builder-drawer {
+            display: none !important;
+        }
+
+        /* ==========================================================================
+           MODULE 2: COZY WOODEN TABLETOP & WARM HEARTH ENVIRONMENT
+           ========================================================================== */
+        .environment-stage {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+            background: #120a06;
+        }
+
+        .wooden-table-surface {
+            position: absolute;
+            inset: -10%;
+            background:
+                radial-gradient(ellipse 65% 55% at 50% 46%, rgba(255, 175, 75, 0.22) 0%, rgba(180, 95, 30, 0.10) 45%, rgba(10, 5, 3, 0.88) 85%),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent 0px,
+                    transparent 138px,
+                    rgba(8, 3, 1, 0.65) 139px,
+                    rgba(255, 190, 110, 0.04) 141px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    rgba(46, 24, 12, 0.35) 0px,
+                    rgba(62, 33, 16, 0.35) 18px,
+                    rgba(38, 19, 9, 0.35) 36px,
+                    rgba(54, 28, 14, 0.35) 54px
+                ),
+                linear-gradient(180deg, #1b0e07 0%, #2c170c 48%, #180c06 100%);
+            transform: perspective(1000px) rotateX(22deg) scale(1.12);
+            transform-origin: center center;
+        }
+
+        .custom-room-layer {
+            position: absolute;
+            inset: 0;
+            background-image: var(--room-tex);
+            background-size: cover;
+            background-position: center;
+            opacity: 0.85;
+        }
+
+        .story-sky-dome {
+            position: absolute;
+            inset: 0;
+            background-image: var(--current-sky-tex);
+            background-size: cover;
+            background-position: center top;
+            opacity: 0;
+            transition: opacity 1.4s ease;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 50%, transparent 82%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 50%, transparent 82%);
+        }
+
+        body.book-is-open .story-sky-dome {
+            opacity: 1;
+        }
+
+        .cinema-vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 48%, transparent 42%, rgba(6, 3, 2, 0.82) 100%);
+        }
+
+        #weatherCanvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 25;
+            pointer-events: none;
+        }
+
+        #actionCanvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 28;
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           MODULE 3: 3D SCENE VIEWPORT & CAMERA RIG
+           ========================================================================== */
+        .scene-viewport {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 2200px;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        .book-rig {
+            position: relative;
+            width: calc(var(--page-width) * 2);
+            height: var(--page-height);
+            flex-shrink: 0;
+            transform-style: preserve-3d;
+            transform: translateY(var(--rig-offset-y)) scale(var(--rig-scale));
+            transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ==========================================================================
+           MODULE 4: 3D BOOK ARCHITECTURE (STRICT Z-LAYERING)
+           ========================================================================== */
+        .book {
+            position: relative;
+            width: var(--page-width);
+            height: var(--page-height);
+            transform-style: preserve-3d;
+            transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .book.state-floating {
+            transform: translate3d(0, -100vh, 260px) rotateX(75deg) rotateY(-25deg) rotateZ(-18deg) scale3d(0.4, 0.4, 0.4);
+        }
+
+        .book.state-closed {
+            transform: translate3d(0, 0, 0) rotateX(22deg) rotateY(0deg) rotateZ(0deg);
+            animation: idleHover 5s ease-in-out infinite;
+        }
+
+        @keyframes idleHover {
+            0%, 100% { transform: translate3d(0, 0px, 0) rotateX(22deg); }
+            50%      { transform: translate3d(0, -10px, 14px) rotateX(24deg); }
+        }
+
+        .book.state-open {
+            transform: translate3d(calc(var(--page-width) * 0.5), 0, 0) rotateX(var(--book-tilt-x)) rotateY(0deg) rotateZ(0deg);
+        }
+
+        .book-drop-shadow {
+            position: absolute;
+            left: calc(var(--page-width) * -1.04);
+            top: -5%;
+            width: calc(var(--page-width) * 2.08);
+            height: calc(108% + var(--page-extra-bottom));
+            background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85) 25%, rgba(0, 0, 0, 0) 72%);
+            transform: translateZ(-24px);
+            opacity: 0;
+            transition: opacity 1s ease;
+            pointer-events: none;
+        }
+
+        .book.state-open .book-drop-shadow {
+            opacity: 1;
+        }
+
+        .open-leather-binding-base {
+            position: absolute;
+            left: calc(var(--page-width) * -1 - 12px);
+            top: -10px;
+            width: calc(var(--page-width) * 2 + 24px);
+            height: calc(100% + var(--page-extra-bottom) + 20px);
+            border-radius: 12px;
+            background: linear-gradient(90deg, #24120b 0%, #381d11 47%, #170b06 50%, #381d11 53%, #24120b 100%);
+            border: 2px solid #8c6520;
+            box-shadow: inset 0 0 18px rgba(0,0,0,0.85);
+            transform: translateZ(-14px);
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+        }
+
+        .book.state-open .open-leather-binding-base {
+            opacity: 1;
+        }
+
+        .book-spine {
+            position: absolute;
+            left: -18px;
+            top: -4px;
+            width: 36px;
+            height: calc(100% + var(--page-extra-bottom) + 8px);
+            background: linear-gradient(90deg, #1b0c06, #422214 50%, #1b0c06);
+            border-top: 2px solid var(--gold-dark);
+            border-bottom: 2px solid var(--gold-dark);
+            transform: translateZ(-11px) rotateY(-90deg);
+            transform-origin: center;
+        }
+
+        .back-cover-base {
+            position: absolute;
+            inset: -6px -8px calc(-6px - var(--page-extra-bottom)) -4px;
+            background: #2b150c;
+            border-radius: 4px 12px 12px 4px;
+            border: 2px solid #7a571c;
+            transform: translateZ(-13px);
+            box-shadow: 0 22px 45px rgba(0, 0, 0, 0.85);
+        }
+
+        .pages-thickness {
+            position: absolute;
+            inset: 3px -3px calc(3px - var(--page-extra-bottom)) 0;
+            background: repeating-linear-gradient(90deg, #f3e6c8 0px, #decba4 2px, #cbb282 4px);
+            border-radius: 2px 7px 7px 2px;
+            transform: translateZ(-6px);
+        }
+
+        .paper-right {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: calc(100% + var(--page-extra-bottom));
+            background-color: #f4e7cb;
+            background-image:
+                linear-gradient(to right, rgba(35, 18, 6, 0.38) 0%, rgba(35, 18, 6, 0.08) 12%, transparent 28%),
+                var(--paper-tex);
+            background-size: 100% 100%, 200% 100%;
+            background-position: left top, right top;
+            border-radius: 0 7px 7px 0;
+            transform: translateZ(0px);
+            box-shadow: inset -2px 0 8px rgba(0,0,0,0.18);
+        }
+
+        .front-cover-leaf {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: calc(100% + var(--page-extra-bottom));
+            transform-style: preserve-3d;
+            transform-origin: left center;
+            transform: translateZ(2px) rotateY(0deg);
+            transition: transform 1.15s cubic-bezier(0.32, 0.04, 0.24, 1);
+            z-index: 15;
+        }
+
+        .book.state-open .front-cover-leaf {
+            transform: translateZ(2px) rotateY(-180deg);
+        }
+
+        .cover-face {
+            position: absolute;
+            inset: 0;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .cover-front-outer {
+            inset: -6px -8px -6px -2px;
+            border-radius: 4px 12px 12px 4px;
+            background-color: #381c10;
+            background-image: var(--cover-tex);
+            background-size: cover;
+            background-position: center;
+            border: 2px solid var(--gold-primary);
+            box-shadow:
+                inset 0 0 24px rgba(0, 0, 0, 0.75),
+                0 12px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .cover-inner-paper-left {
+            background-color: #f4e7cb;
+            background-image:
+                linear-gradient(to left, rgba(35, 18, 6, 0.38) 0%, rgba(35, 18, 6, 0.08) 12%, transparent 28%),
+                var(--paper-tex);
+            background-size: 100% 100%, 200% 100%;
+            background-position: left top, left top;
+            border-radius: 7px 0 0 7px;
+            transform: rotateY(180deg);
+            box-shadow: inset 2px 0 8px rgba(0,0,0,0.18);
+        }
+
+        .turning-page-leaf {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: calc(100% + var(--page-extra-bottom));
+            transform-style: preserve-3d;
+            transform-origin: left center;
+            transform: translateZ(3px) rotateY(0deg);
+            pointer-events: none;
+            display: none;
+            z-index: 20;
+        }
+
+        .turning-page-leaf.flipping-forward {
+            display: block;
+            animation: pageFlipForward 1.1s cubic-bezier(0.42, 0, 0.22, 1) forwards;
+        }
+
+        .turning-page-leaf.flipping-backward {
+            display: block;
+            animation: pageFlipBackward 1.1s cubic-bezier(0.42, 0, 0.22, 1) forwards;
+        }
+
+        @keyframes pageFlipForward {
+            0%   { transform: translateZ(3px) rotateY(0deg); }
+            50%  { transform: translateZ(26px) rotateY(-90deg); }
+            100% { transform: translateZ(3px) rotateY(-180deg); }
+        }
+
+        @keyframes pageFlipBackward {
+            0%   { transform: translateZ(3px) rotateY(-180deg); }
+            50%  { transform: translateZ(26px) rotateY(-90deg); }
+            100% { transform: translateZ(3px) rotateY(0deg); }
+        }
+
+        .turning-page-leaf .leaf-face {
+            position: absolute;
+            inset: 0;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            background-color: #f4e7cb;
+            background-image: var(--paper-tex);
+            background-size: 200% 100%;
+        }
+
+        .turning-page-leaf .leaf-front {
+            background-position: right top;
+            border-radius: 0 7px 7px 0;
+        }
+
+        .turning-page-leaf .leaf-back {
+            background-position: left top;
+            border-radius: 7px 0 0 7px;
+            transform: rotateY(180deg);
+        }
+
+        /* ==========================================================================
+           MODULE 5: 3D POP-UP DIORAMA STAGE & ARTISTIC DIE-CUT BACKDROP MASKS
+           ========================================================================== */
+        .popup-spread-stage {
+            position: absolute;
+            top: 0;
+            left: calc(var(--page-width) * -1);
+            width: calc(var(--page-width) * 2);
+            height: var(--page-height);
+            transform-style: preserve-3d;
+            transform: translateZ(4px);
+            pointer-events: none;
+            z-index: 30;
+        }
+
+        .popup-slot {
+            position: absolute;
+            transform-style: preserve-3d;
+            transform-origin: bottom center;
+        }
+
+        .popup-ground-shadow {
+            position: absolute;
+            left: 12%;
+            right: 12%;
+            bottom: -7px;
+            height: 16px;
+            background: radial-gradient(ellipse at center, rgba(28, 14, 4, 0.52) 0%, rgba(28, 14, 4, 0) 74%);
+            transform: translateZ(1px) scaleX(0);
+            transition: transform 0.65s ease var(--pop-delay, 0s);
+        }
+
+        .book.popups-active .popup-ground-shadow {
+            transform: translateZ(1px) scaleX(var(--item-scale, 1));
+        }
+
+        .popup-standee {
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transform-origin: bottom center;
+            transform: rotateX(0deg) scale3d(0, 0, 0);
+            transition: transform 0.65s cubic-bezier(0.25, 0.9, 0.35, 1) var(--pop-delay, 0s);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .book.popups-active .popup-standee {
+            transform: rotateX(var(--standee-angle)) scale3d(
+                calc(var(--item-scale, 1) * var(--pop-scale-boost, 1)),
+                calc(var(--item-scale, 1) * var(--pop-scale-boost, 1)),
+                1
+            );
+            transition: transform 0.88s cubic-bezier(0.34, 1.42, 0.64, 1) var(--pop-delay, 0s);
+        }
+
+        .book.popups-active .popup-slot.is-bg-slot .popup-standee {
+            transform: rotateX(var(--standee-angle)) scale3d(var(--item-scale, 1), var(--item-scale, 1), 1);
+        }
+
+        .popup-standee img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: bottom center;
+            display: block;
+            pointer-events: none;
+        }
+
+        .popup-slot.is-bg-slot .popup-standee img {
+            object-fit: cover;
+            object-position: center bottom;
+            mask-size: 100% 100%;
+            -webkit-mask-size: 100% 100%;
+            mask-repeat: no-repeat;
+            -webkit-mask-repeat: no-repeat;
+            mask-position: center bottom;
+            -webkit-mask-position: center bottom;
+        }
+
+        /* Декоративный золотой контур бумажной вырубки поверх заднего фона */
+        .bg-diecut-frame {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: block;
+        }
+
+        .fallback-badge {
+            width: 90%;
+            height: 75%;
+            border: 2px dashed rgba(130, 90, 35, 0.55);
+            border-radius: 12px;
+            background: rgba(255, 248, 230, 0.85);
+            color: #4a2c11;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8px;
+            font-size: 12px;
+        }
+
+        /* ==========================================================================
+           MODULE 6: FRONT-FACING UI (OPEN BUTTON & FLUSH BOOK-ATTACHED READER PANEL)
+           ========================================================================== */
+        .start-cta-wrapper {
+            position: fixed;
+            bottom: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 40;
+            transition: opacity 0.45s ease, transform 0.45s ease;
+        }
+
+        .start-cta-wrapper.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-50%) translateY(25px);
+        }
+
+        .btn-open-story {
+            padding: 15px 40px;
+            font-family: var(--font-heading);
+            font-size: 20px;
+            letter-spacing: 1.5px;
+            color: #231105;
+            background: linear-gradient(135deg, #ffe6a3 0%, #f3c86b 50%, #c8922b 100%);
+            border: 2px solid #fff3cf;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, 0.75),
+                0 0 25px var(--gold-glow);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .btn-open-story:hover {
+            transform: translateY(-3px) scale(1.04);
+            box-shadow:
+                0 14px 36px rgba(0, 0, 0, 0.85),
+                0 0 38px rgba(243, 200, 107, 0.75);
+        }
+
+        /* Панель текста сказки — стыкуется ровно от нижнего края книги до низа экрана */
+        .story-reader-panel {
+            position: fixed;
+            top: var(--reader-top, auto);
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%) translateY(24px);
+            width: var(--reader-width, min(94vw, 720px));
+            background: linear-gradient(180deg, rgba(28, 16, 10, 0.94) 0%, rgba(14, 7, 4, 0.98) 100%);
+            border: 1.5px solid rgba(243, 200, 107, 0.52);
+            border-top: 2px solid var(--gold-primary);
+            border-radius: 4px 4px 16px 16px;
+            padding: 12px 22px 10px;
+            z-index: 40;
+            box-shadow:
+                0 16px 40px rgba(0, 0, 0, 0.9),
+                inset 0 2px 18px rgba(243, 200, 107, 0.09);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.45s ease, transform 0.45s ease, width 0.25s ease;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .story-reader-panel.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .story-chapter-label {
+            font-family: var(--font-heading);
+            font-size: 13px;
+            letter-spacing: 2.2px;
+            text-transform: uppercase;
+            color: var(--gold-primary);
+            margin-bottom: 4px;
+            flex-shrink: 0;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+        }
+
+        .story-body-text {
+            font-family: var(--font-body);
+            font-size: var(--font-body-size);
+            line-height: 1.45;
+            color: #fdf5e6;
+            margin: auto 0;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 2px 8px;
+            transition: opacity 0.22s ease, transform 0.22s ease;
+        }
+
+        .story-body-text-inner {
+            max-width: 100%;
+        }
+
+        .story-body-text.dialog-switching {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+
+        .story-body-text-inner::first-letter {
+            font-family: var(--font-heading);
+            font-size: 1.45em;
+            color: var(--gold-primary);
+            padding-right: 2px;
+        }
+
+        .reader-footer-block {
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+
+        .dialog-dots-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 6px;
+            min-height: 8px;
+        }
+
+        .dialog-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(243, 200, 107, 0.25);
+            border: 1px solid rgba(243, 200, 107, 0.5);
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .dialog-dot.active {
+            width: 20px;
+            border-radius: 10px;
+            background: var(--gold-primary);
+            box-shadow: 0 0 8px var(--gold-glow);
+        }
+
+        .reader-controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border-top: 1px solid rgba(243, 200, 107, 0.16);
+            padding-top: 7px;
+        }
+
+        .btn-nav-page {
+            background: rgba(243, 200, 107, 0.14);
+            border: 1px solid rgba(243, 200, 107, 0.42);
+            color: #faeacc;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-nav-page:hover:not(:disabled) {
+            background: rgba(243, 200, 107, 0.30);
+            border-color: var(--gold-primary);
+        }
+
+        .btn-nav-page:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        .page-counter-badge {
+            font-size: 12px;
+            color: rgba(253, 245, 230, 0.7);
+            letter-spacing: 0.5px;
+        }
+
+        /* ==========================================================================
+           MODULE 7: BOOK CONSTRUCTOR DRAWER
+           ========================================================================== */
+        .btn-toggle-builder {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            z-index: 60;
+            background: rgba(22, 12, 7, 0.88);
+            border: 1px solid rgba(243, 200, 107, 0.45);
+            color: var(--gold-primary);
+            padding: 8px 15px;
+            border-radius: 24px;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65);
+            transition: all 0.2s ease;
+        }
+
+        .btn-toggle-builder:hover {
+            background: rgba(42, 24, 14, 0.95);
+            border-color: var(--gold-primary);
+        }
+
+        .builder-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: min(94vw, 420px);
+            height: 100vh;
+            background: rgba(18, 10, 7, 0.97);
+            border-left: 1px solid rgba(243, 200, 107, 0.35);
+            z-index: 70;
+            transform: translateX(102%);
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            display: flex;
+            flex-direction: column;
+            font-family: system-ui, -apple-system, sans-serif;
+            box-shadow: -12px 0 40px rgba(0, 0, 0, 0.85);
+        }
+
+        .builder-drawer.open {
+            transform: translateX(0);
+        }
+
+        .drawer-header {
+            padding: 15px 18px;
+            border-bottom: 1px solid rgba(243, 200, 107, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .drawer-header h2 {
+            font-size: 15px;
+            color: var(--gold-primary);
+            font-weight: 700;
+        }
+
+        .btn-close-drawer {
+            background: transparent;
+            border: none;
+            color: #d8c7a8;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 18px 36px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .builder-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(243, 200, 107, 0.16);
+            border-radius: 12px;
+            padding: 13px;
+        }
+
+        .builder-label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gold-primary);
+            margin-bottom: 9px;
+            font-weight: 700;
+        }
+
+        .page-tabs-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .btn-page-tab {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(243, 200, 107, 0.3);
+            background: rgba(0, 0, 0, 0.4);
+            color: #e6d7bc;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn-page-tab.active {
+            background: var(--gold-primary);
+            color: #1e0e04;
+            font-weight: 700;
+        }
+
+        .btn-add-spread {
+            padding: 6px 11px;
+            border-radius: 8px;
+            border: 1px dashed rgba(243, 200, 107, 0.55);
+            background: transparent;
+            color: var(--gold-primary);
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .fx-pills-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .fx-pill-btn {
+            padding: 7px 6px;
+            border-radius: 8px;
+            border: 1px solid rgba(243, 200, 107, 0.25);
+            background: rgba(0, 0, 0, 0.45);
+            color: #e8dac0;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            text-align: center;
+        }
+
+        .fx-pill-btn:hover {
+            border-color: rgba(243, 200, 107, 0.6);
+        }
+
+        .fx-pill-btn.active {
+            background: rgba(243, 200, 107, 0.22);
+            border-color: var(--gold-primary);
+            color: #fff3d1;
+            font-weight: 600;
+            box-shadow: 0 0 10px rgba(243, 200, 107, 0.25);
+        }
+
+        .builder-select,
+        .builder-input,
+        .builder-textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(243, 200, 107, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            padding: 8px 10px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .dialogs-editor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .dialog-step-card {
+            background: rgba(0, 0, 0, 0.42);
+            border: 1px solid rgba(243, 200, 107, 0.22);
+            border-radius: 9px;
+            padding: 8px;
+        }
+
+        .dialog-step-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            margin-bottom: 6px;
+            font-size: 11px;
+            color: var(--gold-primary);
+            font-weight: 600;
+        }
+
+        .dialog-step-header select {
+            flex: 1;
+            background: rgba(20, 12, 8, 0.9);
+            border: 1px solid rgba(243, 200, 107, 0.3);
+            color: #f5e7c6;
+            border-radius: 6px;
+            padding: 3px 6px;
+            font-size: 11px;
+        }
+
+        .btn-del-dialog {
+            background: rgba(255, 90, 70, 0.15);
+            border: 1px solid rgba(255, 90, 70, 0.35);
+            color: #ffada1;
+            border-radius: 5px;
+            padding: 2px 7px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .dialog-step-card textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(243, 200, 107, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            padding: 6px 8px;
+            font-size: 12px;
+            line-height: 1.35;
+            resize: vertical;
+            min-height: 48px;
+            font-family: inherit;
+        }
+
+        .dialog-actions-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-small-action {
+            flex: 1;
+            padding: 7px 8px;
+            border-radius: 8px;
+            border: 1px dashed rgba(243, 200, 107, 0.5);
+            background: rgba(243, 200, 107, 0.08);
+            color: var(--gold-primary);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-small-action:hover {
+            background: rgba(243, 200, 107, 0.18);
+        }
+
+        .slot-editor-item {
+            background: rgba(0, 0, 0, 0.38);
+            border: 1px solid rgba(243, 200, 107, 0.16);
+            border-radius: 9px;
+            padding: 9px;
+            margin-bottom: 9px;
+        }
+
+        .slot-top-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .slot-thumb {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            object-fit: contain;
+            border: 1px solid rgba(243, 200, 107, 0.28);
+            flex-shrink: 0;
+        }
+
+        .slot-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .slot-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #f5e8ce;
+        }
+
+        .slot-file {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.45);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn-upload-file {
+            background: rgba(243, 200, 107, 0.15);
+            border: 1px solid rgba(243, 200, 107, 0.4);
+            color: var(--gold-primary);
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .btn-upload-file input {
+            display: none;
+        }
+
+        .slot-sliders-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .slider-box {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .slider-box span {
+            font-size: 10px;
+            color: #cbbba0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .slider-box input[type="range"] {
+            width: 100%;
+            accent-color: var(--gold-primary);
+            cursor: pointer;
+        }
+
+        .helper-note {
+            font-size: 11px;
+            line-height: 1.45;
+            color: #d6c5a7;
+            background: rgba(243, 200, 107, 0.07);
+            border-left: 3px solid var(--gold-primary);
+            padding: 8px 10px;
+            border-radius: 4px;
+        }
+
+        .btn-export-story {
+            width: 100%;
+            padding: 13px 16px;
+            border-radius: 10px;
+            border: 1px solid #fff3cf;
+            background: linear-gradient(135deg, #ffe6a3 0%, #f3c86b 50%, #c8922b 100%);
+            color: #231105;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 8px;
+        }
+
+        .btn-export-story:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(243, 200, 107, 0.45);
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #e6d7bc;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-row input {
+            accent-color: var(--gold-primary);
+            width: 15px;
+            height: 15px;
+        }
+
+        /* ==========================================================================
+           MODULE 8: RESPONSIVE MOBILE & FOLDABLE ADAPTATION
+           ========================================================================== */
+        @media (max-width: 768px) {
+            :root {
+                --page-extra-bottom: 30px;
+            }
+            .story-reader-panel {
+                bottom: 8px;
+                padding: 8px 14px 8px;
+                border-radius: 4px 4px 14px 14px;
+            }
+            .story-chapter-label {
+                font-size: 11px;
+                letter-spacing: 1.4px;
+                margin-bottom: 2px;
+            }
+            .story-body-text {
+                line-height: 1.35;
+            }
+            .btn-nav-page {
+                padding: 5px 14px;
+                font-size: 12px;
+            }
+            .btn-open-story {
+                padding: 13px 30px;
+                font-size: 17px;
+            }
+        }
+    </style>
+</head>
+<body class="reader-only-mode">
+
+    <!-- MODULE 2: COZY WOODEN TABLETOP & WARM HEARTH ENVIRONMENT -->
+    <div class="environment-stage">
+        <div class="wooden-table-surface"></div>
+        <div class="custom-room-layer"></div>
+        <div class="story-sky-dome"></div>
+        <div class="cinema-vignette"></div>
+    </div>
+
+    <!-- ХОЛСТЫ ПОГОДЫ И ЖИВОГО ДЕЙСТВИЯ -->
+    <canvas id="weatherCanvas" width="344" height="882"></canvas>
+    <canvas id="actionCanvas" width="344" height="882"></canvas>
+
+    <!-- MODULE 3 & 4: 3D SCENE VIEWPORT & POP-UP BOOK -->
+    <div class="scene-viewport">
+        <div class="book-rig" id="bookRigElement">
+            <div class="book state-floating" id="bookElement">
+                <div class="book-drop-shadow"></div>
+                <div class="open-leather-binding-base" id="leatherBindingBase"></div>
+                <div class="book-spine"></div>
+                <div class="back-cover-base"></div>
+                <div class="pages-thickness"></div>
+                <div class="paper-right" id="paperRightElement"></div>
+
+                <!-- 3D СЦЕНА ДЛЯ POP-UP ФИГУР -->
+                <div class="popup-spread-stage" id="popupStage"></div>
+
+                <!-- ПЕРЕВОРАЧИВАЮЩИЙСЯ БУМАЖНЫЙ ЛИСТ -->
+                <div class="turning-page-leaf" id="turningLeaf">
+                    <div class="leaf-face leaf-front"></div>
+                    <div class="leaf-face leaf-back"></div>
+                </div>
+
+                <!-- ПЕРЕДНЯЯ ОБЛОЖКА И ЛЕВАЯ СТРАНИЦА -->
+                <div class="front-cover-leaf">
+                    <div class="cover-face cover-front-outer"></div>
+                    <div class="cover-face cover-inner-paper-left" id="paperLeftElement"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODULE 6: КНОПКА ОТКРЫТИЯ И ПАНЕЛЬ ЧТЕНИЯ СКАЗКИ (БЕЗ КНОПКИ ЗАКРЫТИЯ, ВПЛОТНУЮ К КНИГЕ) -->
+    <div class="start-cta-wrapper" id="startCtaWrapper">
+        <button class="btn-open-story" onclick="openBookStory()">✨ Открыть сказку</button>
+    </div>
+
+    <div class="story-reader-panel" id="storyReaderPanel">
+        <div class="story-chapter-label" id="storyChapterTitle">ГЛАВА I • ШЕПЧУЩИЙ ЛЕС</div>
+        <div class="story-body-text" id="storyBodyText">
+            <div class="story-body-text-inner" id="storyBodyTextInner">Старая лесная сосна тихонько зашумела хвойными ветвями, словно нашёптывая мальчику древнюю тайну, которую хранили здешние мхи да звёзды.</div>
+        </div>
+        <div class="reader-footer-block">
+            <div class="dialog-dots-bar" id="dialogDotsContainer"><span class="dialog-dot" title="Абзац 1"></span><span class="dialog-dot active" title="Абзац 2"></span><span class="dialog-dot" title="Абзац 3"></span><span class="dialog-dot" title="Абзац 4"></span><span class="dialog-dot" title="Абзац 5"></span></div>
+            <div class="reader-controls-row">
+                <button class="btn-nav-page" id="btnPrevStep" onclick="navigateStoryStep(-1)">← Назад</button>
+                <span class="page-counter-badge" id="pageCounterLabel">Стр. 1 из 2 • Абзац 2/5</span>
+                <button class="btn-nav-page" id="btnNextStep" onclick="navigateStoryStep(1)">Дальше →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODULE 7: КОНСТРУКТОР КНИГИ -->
+    <button class="btn-toggle-builder" onclick="toggleBuilderDrawer()">🛠️ Конструктор книги</button>
+
+    <aside class="builder-drawer" id="builderDrawer">
+        <div class="drawer-header">
+            <h2>🛠️ Конструктор сказки</h2>
+            <button class="btn-close-drawer" onclick="toggleBuilderDrawer()">✕</button>
+        </div>
+        <div class="drawer-body">
+
+            <!-- 1. СТРАНИЦЫ И РАСКЛАДКА -->
+            <div class="builder-section">
+                <label class="builder-label">Страницы (Развороты)</label>
+                <div class="page-tabs-row" id="pageTabsContainer"><button class="btn-page-tab active">Стр. 1</button><button class="btn-page-tab">Стр. 2</button><button class="btn-add-spread">+ Стр.</button></div>
+
+                <label class="builder-label">Заголовок главы</label>
+                <input type="text" class="builder-input" id="inputChapterTitle" oninput="updateCurrentChapterTitle()">
+
+                <div style="height:10px"></div>
+                <label class="builder-label">Схема расположения 3D-фигур</label>
+                <select class="builder-select" id="layoutSelect" onchange="changeCurrentPageLayout(this.value)">
+                    <option value="layout-5">Фон + 5 картинок (Диорама)</option>
+                    <option value="layout-4">Фон + 4 картинки</option>
+                    <option value="layout-3">Фон + 3 картинки</option>
+                    <option value="layout-2">Фон + 2 картинки</option>
+                </select>
+            </div>
+
+            <!-- 2. ПОГОДА И ЖИВОЕ ДЕЙСТВИЕ НА СТРАНИЦЕ -->
+            <div class="builder-section">
+                <label class="builder-label">Погодный эффект на странице</label>
+                <div class="fx-pills-grid" id="weatherPillsGrid">
+                    <button class="fx-pill-btn" data-fx="flowers" onclick="selectPageWeather('flowers')">🌸 Лепестки</button>
+                    <button class="fx-pill-btn active" data-fx="snow" onclick="selectPageWeather('snow')">❄️ Снежинки</button>
+                    <button class="fx-pill-btn" data-fx="rain" onclick="selectPageWeather('rain')">🌧️ Дождь</button>
+                    <button class="fx-pill-btn" data-fx="autumn" onclick="selectPageWeather('autumn')">🍂 Осень</button>
+                    <button class="fx-pill-btn" data-fx="fireflies" onclick="selectPageWeather('fireflies')">✨ Светлячки</button>
+                    <button class="fx-pill-btn" data-fx="none" onclick="selectPageWeather('none')">🚫 Без эффекта</button>
+                </div>
+
+                <div style="height:12px"></div>
+                <label class="builder-label">Живое действие (Перелетает по абзацам)</label>
+                <div class="fx-pills-grid" id="travelerPillsGrid">
+                    <button class="fx-pill-btn" data-tr="fairy" onclick="selectPageTraveler('fairy')">🧚‍♀️ Фея</button>
+                    <button class="fx-pill-btn" data-tr="yarn" onclick="selectPageTraveler('yarn')">🧶 Клубок с нитью</button>
+                    <button class="fx-pill-btn" data-tr="orb" onclick="selectPageTraveler('orb')">🔮 Золотой шар</button>
+                    <button class="fx-pill-btn" data-tr="thread" onclick="selectPageTraveler('thread')">✨ Созвездие</button>
+                    <button class="fx-pill-btn active" data-tr="none" onclick="selectPageTraveler('none')">🚫 Выкл</button>
+                </div>
+            </div>
+
+            <!-- 3. ДИАЛОГИ И АБЗАЦЫ СТРАНИЦЫ -->
+            <div class="builder-section">
+                <label class="builder-label">Абзацы / Диалоги страницы (по кнопке «Дальше»)</label>
+                <div class="dialogs-editor-list" id="dialogsEditorList"><div class="dialog-step-card">
+                    <div class="dialog-step-header">
+                        <span>Абзац 1</span>
+                        <select onchange="updateDialogTargetSlot(0, this.value)">
+                            <option value="auto">🎯 По очереди</option><option value="left-back">🎯 2. Вековая сосна (Слева)</option><option value="right-back">🎯 3. Указатель (Справа)</option><option value="center">🎯 4. Лесная таверна (Центр)</option><option value="left-front" selected="">🎯 5. Юный путник (Слева)</option><option value="right-front">🎯 6. Светящиеся грибы</option>
+                        </select>
+                        <button class="btn-del-dialog" onclick="removeDialogStep(0)">✕</button>
+                    </div>
+                    <textarea rows="2" oninput="updateDialogText(0, this.value)" onfocus="previewDialogStep(0)">В некотором царстве, на самом краю Шепчущего леса, где вековые сосны задевают верхушками серебряный месяц, шёл по тропинке юный путник с тёплым фонарём в руке.</textarea>
+                </div><div class="dialog-step-card">
+                    <div class="dialog-step-header">
+                        <span>Абзац 2</span>
+                        <select onchange="updateDialogTargetSlot(1, this.value)">
+                            <option value="auto">🎯 По очереди</option><option value="left-back" selected="">🎯 2. Вековая сосна (Слева)</option><option value="right-back">🎯 3. Указатель (Справа)</option><option value="center">🎯 4. Лесная таверна (Центр)</option><option value="left-front">🎯 5. Юный путник (Слева)</option><option value="right-front">🎯 6. Светящиеся грибы</option>
+                        </select>
+                        <button class="btn-del-dialog" onclick="removeDialogStep(1)">✕</button>
+                    </div>
+                    <textarea rows="2" oninput="updateDialogText(1, this.value)" onfocus="previewDialogStep(1)">Старая лесная сосна тихонько зашумела хвойными ветвями, словно нашёптывая мальчику древнюю тайну, которую хранили здешние мхи да звёзды.</textarea>
+                </div><div class="dialog-step-card">
+                    <div class="dialog-step-header">
+                        <span>Абзац 3</span>
+                        <select onchange="updateDialogTargetSlot(2, this.value)">
+                            <option value="auto">🎯 По очереди</option><option value="left-back">🎯 2. Вековая сосна (Слева)</option><option value="right-back">🎯 3. Указатель (Справа)</option><option value="center" selected="">🎯 4. Лесная таверна (Центр)</option><option value="left-front">🎯 5. Юный путник (Слева)</option><option value="right-front">🎯 6. Светящиеся грибы</option>
+                        </select>
+                        <button class="btn-del-dialog" onclick="removeDialogStep(2)">✕</button>
+                    </div>
+                    <textarea rows="2" oninput="updateDialogText(2, this.value)" onfocus="previewDialogStep(2)">И вдруг на опушке выросла уютная лесная таверна! В её резных окошках приветливо заплясал золотой огонёк очага, обещая путнику тёплый хлеб и добрые сказки.</textarea>
+                </div><div class="dialog-step-card">
+                    <div class="dialog-step-header">
+                        <span>Абзац 4</span>
+                        <select onchange="updateDialogTargetSlot(3, this.value)">
+                            <option value="auto">🎯 По очереди</option><option value="left-back">🎯 2. Вековая сосна (Слева)</option><option value="right-back" selected="">🎯 3. Указатель (Справа)</option><option value="center">🎯 4. Лесная таверна (Центр)</option><option value="left-front">🎯 5. Юный путник (Слева)</option><option value="right-front">🎯 6. Светящиеся грибы</option>
+                        </select>
+                        <button class="btn-del-dialog" onclick="removeDialogStep(3)">✕</button>
+                    </div>
+                    <textarea rows="2" oninput="updateDialogText(3, this.value)" onfocus="previewDialogStep(3)">У замшелого перекрёстка деревянный указатель скрипуче повернул стрелку на восток — туда, где за синими хребтами дремали облачные чертоги.</textarea>
+                </div><div class="dialog-step-card">
+                    <div class="dialog-step-header">
+                        <span>Абзац 5</span>
+                        <select onchange="updateDialogTargetSlot(4, this.value)">
+                            <option value="auto">🎯 По очереди</option><option value="left-back">🎯 2. Вековая сосна (Слева)</option><option value="right-back">🎯 3. Указатель (Справа)</option><option value="center">🎯 4. Лесная таверна (Центр)</option><option value="left-front">🎯 5. Юный путник (Слева)</option><option value="right-front" selected="">🎯 6. Светящиеся грибы</option>
+                        </select>
+                        <button class="btn-del-dialog" onclick="removeDialogStep(4)">✕</button>
+                    </div>
+                    <textarea rows="2" oninput="updateDialogText(4, this.value)" onfocus="previewDialogStep(4)">А у самых корней засветились лазурным светом дивные сказочные грибы, указывая заветную стезю к следующей странице нашей книги...</textarea>
+                </div></div>
+                <div class="dialog-actions-row">
+                    <button class="btn-small-action" onclick="addDialogStepToCurrentPage()">+ Добавить абзац</button>
+                    <button class="btn-small-action" onclick="promptBulkTextSplit()">📋 Вставить весь текст</button>
+                </div>
+            </div>
+
+            <!-- 4. НАСТРОЙКА КАЖДОЙ 3D-ФИГУРЫ НА СТРАНИЦЕ (ВКЛЮЧАЯ МАСКУ ВЫРУБКИ ФОНА) -->
+            <div class="builder-section">
+                <label class="builder-label">3D-фигуры и маска вырубки фона</label>
+                <div id="slotsEditorContainer"><div class="slot-editor-item">
+                    <div class="slot-top-row">
+                        <img class="slot-thumb" src="mountains.png" onerror="this.style.opacity='0.2'">
+                        <div class="slot-info">
+                            <div class="slot-title">1. Задний фон (Небо/Горы)</div>
+                            <div class="slot-file" style="color:#f3c86b">Файл: mountains.png</div>
+                        </div>
+                        <label class="btn-upload-file">
+                            Заменить
+                            <input type="file" accept="image/*" onchange="uploadSlotImage(event, 'bg')">
+                        </label>
+                    </div>
+                    <div class="slot-sliders-grid">
+                        <div class="slider-box">
+                            <span>Размер <b><span id="val-sc-bg">100</span>%</b></span>
+                            <input type="range" min="0.25" max="1.80" step="0.05" value="1" oninput="document.getElementById('val-sc-bg').textContent=Math.round(this.value*100); updateSlotTransformLive('bg', 'scale', this.value)">
+                        </div>
+                        <div class="slider-box">
+                            <span>Влево/Вправо <b><span id="val-x-bg">0</span>px</b></span>
+                            <input type="range" min="-180" max="180" step="5" value="0" oninput="document.getElementById('val-x-bg').textContent=this.value; updateSlotTransformLive('bg', 'offsetX', this.value)">
+                        </div>
+                        <div class="slider-box" style="grid-column: span 2;">
+                            <span>Глубина на листе (Ближе / Дальше) <b><span id="val-y-bg">0</span>px</b></span>
+                            <input type="range" min="-120" max="140" step="5" value="0" oninput="document.getElementById('val-y-bg').textContent=this.value; updateSlotTransformLive('bg', 'offsetY', this.value)">
+                        </div>
+                        
+                    <div class="slider-box" style="grid-column: span 2; margin-top: 2px;">
+                        <span>✂️ Форма вырубки заднего фона (Силуэт-маска)</span>
+                        <select class="builder-select" style="margin-top:3px; padding:6px 8px; font-size:12px;" onchange="updateSlotTransformLive('bg', 'maskShape', this.value)">
+                            <option value="mountains" selected="">⛰️ Горные пики (Сказочный хребет)</option><option value="arch">🏛️ Диснеевская панорамная арка</option><option value="castle">👑 Корона замка и башни</option><option value="forest">🌲 Лесной свод (Кроны вековых сосен)</option><option value="clouds">☁️ Облачные чертоги (Волны)</option><option value="triptych">⚜️ Готический триптих (Три свода)</option><option value="rect">▭ Классический прямоугольник</option>
+                        </select>
+                    </div>
+                    <div class="slider-box" style="grid-column: span 2;">
+                        <span>Высота фона <b><span id="val-h-bg">100</span>%</b></span>
+                        <input type="range" min="70" max="150" step="5" value="100" oninput="document.getElementById('val-h-bg').textContent=this.value; updateSlotTransformLive('bg', 'heightPct', this.value)">
+                    </div>
+                
+                    </div>
+                </div><div class="slot-editor-item">
+                    <div class="slot-top-row">
+                        <img class="slot-thumb" src="tree-left.png" onerror="this.style.opacity='0.2'">
+                        <div class="slot-info">
+                            <div class="slot-title">2. Вековая сосна (Слева)</div>
+                            <div class="slot-file" style="color:#f3c86b">Файл: tree-left.png</div>
+                        </div>
+                        <label class="btn-upload-file">
+                            Заменить
+                            <input type="file" accept="image/*" onchange="uploadSlotImage(event, 'left-back')">
+                        </label>
+                    </div>
+                    <div class="slot-sliders-grid">
+                        <div class="slider-box">
+                            <span>Размер <b><span id="val-sc-left-back">100</span>%</b></span>
+                            <input type="range" min="0.25" max="1.80" step="0.05" value="1" oninput="document.getElementById('val-sc-left-back').textContent=Math.round(this.value*100); updateSlotTransformLive('left-back', 'scale', this.value)">
+                        </div>
+                        <div class="slider-box">
+                            <span>Влево/Вправо <b><span id="val-x-left-back">0</span>px</b></span>
+                            <input type="range" min="-180" max="180" step="5" value="0" oninput="document.getElementById('val-x-left-back').textContent=this.value; updateSlotTransformLive('left-back', 'offsetX', this.value)">
+                        </div>
+                        <div class="slider-box" style="grid-column: span 2;">
+                            <span>Глубина на листе (Ближе / Дальше) <b><span id="val-y-left-back">0</span>px</b></span>
+                            <input type="range" min="-120" max="140" step="5" value="0" oninput="document.getElementById('val-y-left-back').textContent=this.value; updateSlotTransformLive('left-back', 'offsetY', this.value)">
+                        </div>
+                        
+                    </div>
+                </div><div class="slot-editor-item">
+                    <div class="slot-top-row">
+                        <img class="slot-thumb" src="tree-right.png" onerror="this.style.opacity='0.2'">
+                        <div class="slot-info">
+                            <div class="slot-title">3. Указатель (Справа)</div>
+                            <div class="slot-file" style="color:#f3c86b">Файл: tree-right.png</div>
+                        </div>
+                        <label class="btn-upload-file">
+                            Заменить
+                            <input type="file" accept="image/*" onchange="uploadSlotImage(event, 'right-back')">
+                        </label>
+                    </div>
+                    <div class="slot-sliders-grid">
+                        <div class="slider-box">
+                            <span>Размер <b><span id="val-sc-right-back">95</span>%</b></span>
+                            <input type="range" min="0.25" max="1.80" step="0.05" value="0.95" oninput="document.getElementById('val-sc-right-back').textContent=Math.round(this.value*100); updateSlotTransformLive('right-back', 'scale', this.value)">
+                        </div>
+                        <div class="slider-box">
+                            <span>Влево/Вправо <b><span id="val-x-right-back">0</span>px</b></span>
+                            <input type="range" min="-180" max="180" step="5" value="0" oninput="document.getElementById('val-x-right-back').textContent=this.value; updateSlotTransformLive('right-back', 'offsetX', this.value)">
+                        </div>
+                        <div class="slider-box" style="grid-column: span 2;">
+                            <span>Глубина на листе (Ближе / Дальше) <b><span id="val-y-right-back">0</span>px</b></span>
+                            <input type="range" min="-120" max="140" step="5" value="0" oninput="document.getElementById('val-y-right-back').textContent=this.value; updateSlotTransformLive('right-back', 'offsetY', this.value)">
+                        </div>
+                        
+                    </div>
+                </div><div class="slot-editor-item">
+                    <div class="slot-top-row">
+                        <img class="slot-thumb" src="tavern.png" onerror="this.style.opacity='0.2'">
+                        <div class="slot-info">
+                            <div class="slot-title">4. Лесная таверна (Центр)</div>
+                            <div class="slot-file" style="color:#f3c86b">Файл: tavern.png</div>
+                        </div>
+                        <label class="btn-upload-file">
+                            Заменить
+                            <input type="file" accept="image/*" onchange="uploadSlotImage(event, 'center')">
+                        </label>
+                    </div>
+                    <div class="slot-sliders-grid">
+                        <div class="slider-box">
+                            <span>Размер <b><span id="val-sc-center">100</span>%</b></span>
+                            <input type="range" min="0.25" max="1.80" step="0.05" value="1" oninput="document.getElementById('val-sc-center').textContent=Math.round(this.value*100); updateSlotTransformLive('center', 'scale', this.value)">
+                        </div>
+                        <div class="slider-box">
+                            <span>Влево/Вправо <b><span id="val-x-center">0</span>px</b></span>
+                            <input type="range" min="-180" max="180" step="5" value="0" oninput="document.getElementById('val-x-center').textContent=this.value; updateSlotTransformLive('center', 'offsetX', this.value)">
+                        </div>
+                        <div class="slider-box" style="grid-column: span 2;">
+                            <span>Глубина на листе (Ближе / Дальше) <b><span id="val-y-center">0</span>px</b></span>
+                            <input type="range" min="-120" max="140" step="5" value="0" oninput="document.getElementById('val-y-center').textContent=this.value; updateSlotTransformLive('center', 'offsetY', this.value)">
+                        </div>
+                        
+                    </div>
+                </div><div class="slot-editor-item">
+                    <div class="slot-top-row">
+                        <img class="slot-thumb" src="hero.png" onerror="this.style.opacity='0.2'">
+                        <div class="slot-info">
+                            <div class="slot-title">5. Юный путник (Слева)</div>
+                            <div class="slot-file" style="color:#f3c86b">Файл: hero.png</div>
+                        </div>
+                        <label class="btn-upload-file">
+                            Заменить
+                            <input type="file" accept="image/*" onchange="uploadSlotImage(event, 'left-front')">
+                        </label>
+                    </div>
+                    <div class="slot-sliders-grid">
+                        <div class="slider-box">
+                            <span>Размер <b><span id="val-sc-left-front">105</span>%</b></span>
+                            <input type="range" min="0.25" max="1.80" step="0.05" value="1.05" oninput="document.getElementById('val-sc-left-front').textContent=Math.round(this.value*100); updateSlotTransformLive('left-front', 'scale', this.value)">
+                        </div>
+                        <div class="slider-box">
+                            <span>Влево/Вправо <b><span id="val-x-left-front">0</span>px</b></span>
+                            <input type="range" min="-180" max="180" step="5" value="0" oninput="document.getElementById('val-x-left-front').textContent=this.value; updateSlotTransformLive('left-front', 'offsetX', this.value)">
+                        </div>
+                        <div class="slider-box" style="grid-column: span 2;">
+                            <span>Глубина на листе (Ближе / Дальше) <b><span id="val-y-left-front">0</span>px</b></span>
+                            <input type="range" min="-120" max="140" step="5" value="0" oninput="document.getElementById('val-y-left-front').textContent=this.value; updateSlotTransformLive('left-front', 'offsetY', this.value)">
+                        </div>
+                        
+                    </div>
+                </div><div class="slot-editor-item">
+                    <div class="slot-top-row">
+                        <img class="slot-thumb" src="mushrooms.png" onerror="this.style.opacity='0.2'">
+                        <div class="slot-info">
+                            <div class="slot-title">6. Светящиеся грибы</div>
+                            <div class="slot-file" style="color:#f3c86b">Файл: mushrooms.png</div>
+                        </div>
+                        <label class="btn-upload-file">
+                            Заменить
+                            <input type="file" accept="image/*" onchange="uploadSlotImage(event, 'right-front')">
+                        </label>
+                    </div>
+                    <div class="slot-sliders-grid">
+                        <div class="slider-box">
+                            <span>Размер <b><span id="val-sc-right-front">58</span>%</b></span>
+                            <input type="range" min="0.25" max="1.80" step="0.05" value="0.58" oninput="document.getElementById('val-sc-right-front').textContent=Math.round(this.value*100); updateSlotTransformLive('right-front', 'scale', this.value)">
+                        </div>
+                        <div class="slider-box">
+                            <span>Влево/Вправо <b><span id="val-x-right-front">0</span>px</b></span>
+                            <input type="range" min="-180" max="180" step="5" value="0" oninput="document.getElementById('val-x-right-front').textContent=this.value; updateSlotTransformLive('right-front', 'offsetX', this.value)">
+                        </div>
+                        <div class="slider-box" style="grid-column: span 2;">
+                            <span>Глубина на листе (Ближе / Дальше) <b><span id="val-y-right-front">0</span>px</b></span>
+                            <input type="range" min="-120" max="140" step="5" value="0" oninput="document.getElementById('val-y-right-front').textContent=this.value; updateSlotTransformLive('right-front', 'offsetY', this.value)">
+                        </div>
+                        
+                    </div>
+                </div></div>
+            </div>
+
+            <!-- 5. КАМЕРА, УГОЛ 3D И ШРИФТЫ -->
+            <div class="builder-section">
+                <label class="builder-label">Камера и 3D-наклон фигур</label>
+                <div class="slot-sliders-grid">
+                    <div class="slider-box">
+                        <span>Масштаб книги <b><span id="lblMobileZoom">1.30</span>x</b></span>
+                        <input type="range" id="rangeZoom" min="0.65" max="1.45" step="0.05" value="1.0" oninput="setMobileZoom(this.value)">
+                    </div>
+                    <div class="slider-box">
+                        <span>Сдвиг вверх/вниз <b><span id="lblBookY">0</span>px</b></span>
+                        <input type="range" id="rangeBookY" min="-140" max="140" step="5" value="0" oninput="setBookManualY(this.value)">
+                    </div>
+                    <div class="slider-box" style="grid-column: span 2;">
+                        <span>Угол подъёма 3D-фигур <b><span id="lblStandeeAngle">-56</span>°</b></span>
+                        <input type="range" id="rangeAngle" min="-85" max="-25" step="1" value="-56" oninput="setStandeeAngle(this.value)">
+                    </div>
+                </div>
+
+                <div style="height:12px"></div>
+                <label class="builder-label">Шрифты сказки</label>
+                <div style="display:grid; gap:8px;">
+                    <select class="builder-select" id="selectHeadingFont" onchange="updateTypographySettings()">
+                        <option value="'Ruslan Display', Georgia, serif">Заголовки: Ruslan Display (Старославянский)</option>
+                        <option value="'Forum', Georgia, serif">Заголовки: Forum (Классический)</option>
+                        <option value="'Marck Script', cursive">Заголовки: Marck Script (Рукописный)</option>
+                        <option value="'Cormorant Garamond', Georgia, serif">Заголовки: Cormorant Garamond</option>
+                    </select>
+                    <select class="builder-select" id="selectBodyFont" onchange="updateTypographySettings()">
+                        <option value="'Alice', Georgia, serif">Текст: Alice (Книжный сказочный)</option>
+                        <option value="'Cormorant Garamond', Georgia, serif">Текст: Cormorant Garamond (Антиква)</option>
+                        <option value="'Forum', Georgia, serif">Текст: Forum (Строгий)</option>
+                        <option value="'Marck Script', cursive">Текст: Marck Script (Каллиграфия)</option>
+                    </select>
+                    <div class="slider-box">
+                        <span>Размер шрифта текста <b><span id="lblFontSize">16</span>px</b></span>
+                        <input type="range" id="rangeFontSize" min="13" max="22" step="0.5" value="16" oninput="updateTypographySettings()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. ТЕКСТУРЫ КНИГИ И СКАЧИВАНИЕ НАСТРОЕННОЙ СКАЗКИ -->
+            <div class="builder-section">
+                <label class="builder-label">Текстуры обложки, бумаги и комнаты</label>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px; margin-bottom:12px;">
+                    <label class="btn-upload-file" style="text-align:center;">
+                        📕 Обложка
+                        <input type="file" accept="image/*" onchange="uploadGlobalTexture(event, '--cover-tex')">
+                    </label>
+                    <label class="btn-upload-file" style="text-align:center;">
+                        📜 Бумага
+                        <input type="file" accept="image/*" onchange="uploadGlobalTexture(event, '--paper-tex')">
+                    </label>
+                    <label class="btn-upload-file" style="text-align:center;">
+                        🪵 Стол/Фон
+                        <input type="file" accept="image/*" onchange="uploadGlobalTexture(event, '--room-tex')">
+                    </label>
+                </div>
+
+                <label class="builder-label">Скачивание настроенной сказки</label>
+                <div class="helper-note" id="packStatusBadge">✨ Все ваши настройки (текст, главы, маски вырубки фона, размеры, позиции 3D-фигур, шрифты и имена картинок) сохраняются внутрь скачанного <b>index.html</b>.</div>
+
+                <label class="checkbox-row">
+                    <input type="checkbox" id="chkHideBuilderInExport">
+                    <span>Скрыть кнопку конструктора в скачанном файле (режим только для чтения)</span>
+                </label>
+
+                <button class="btn-export-story" id="btnExportStory" onclick="exportStandaloneStoryHTML()" disabled="">⏳ Подготовка файла сказки...</button>
+            </div>
+
+        </div>
+    </aside>
+
+    <script>
+        /* ==========================================================================
+           MODULE 9: BALANCED DISNEY DIORAMA LAYOUT PRESETS & DIE-CUT MASKS
+           ========================================================================== */
+        const LAYOUT_PRESETS = {
+            'layout-5': {
+                name: 'Фон + 5 картинок',
+                slots: [
+                    { id: 'bg',          label: '1. Задний фон (Небо/Горы)', w: 760, h: 430, bottom: 365, left: 0,   delay: 0.04, isBg: true },
+                    { id: 'left-back',   label: '2. Вековая сосна (Слева)',  w: 235, h: 315, bottom: 235, left: 22,  delay: 0.14 },
+                    { id: 'right-back',  label: '3. Указатель (Справа)',     w: 225, h: 305, bottom: 230, left: 510, delay: 0.20 },
+                    { id: 'center',      label: '4. Лесная таверна (Центр)', w: 335, h: 320, bottom: 175, left: 212, delay: 0.27 },
+                    { id: 'left-front',  label: '5. Юный путник (Слева)',    w: 185, h: 225, bottom: 42,  left: 115, delay: 0.36 },
+                    { id: 'right-front', label: '6. Светящиеся грибы',       w: 175, h: 165, bottom: 48,  left: 465, delay: 0.42 }
+                ]
+            },
+            'layout-3': {
+                name: 'Фон + 3 картинки',
+                slots: [
+                    { id: 'bg',          label: '1. Задний фон (Небо/Горы)', w: 760, h: 430, bottom: 365, left: 0,   delay: 0.04, isBg: true },
+                    { id: 'center',      label: '2. Главный центр',          w: 370, h: 340, bottom: 185, left: 195, delay: 0.18 },
+                    { id: 'left-front',  label: '3. Передний левый',         w: 205, h: 245, bottom: 42,  left: 95,  delay: 0.30 },
+                    { id: 'right-front', label: '4. Передний правый',        w: 205, h: 225, bottom: 48,  left: 460, delay: 0.38 }
+                ]
+            },
+            'layout-4': {
+                name: 'Фон + 4 картинки',
+                slots: [
+                    { id: 'bg',          label: '1. Задний фон',             w: 760, h: 430, bottom: 365, left: 0,   delay: 0.04, isBg: true },
+                    { id: 'left-back',   label: '2. Средний левый',          w: 260, h: 330, bottom: 210, left: 55,  delay: 0.16 },
+                    { id: 'right-back',  label: '3. Средний правый',         w: 260, h: 330, bottom: 210, left: 445, delay: 0.22 },
+                    { id: 'left-front',  label: '4. Ближний левый',          w: 195, h: 235, bottom: 42,  left: 125, delay: 0.34 },
+                    { id: 'right-front', label: '5. Ближний правый',         w: 195, h: 225, bottom: 42,  left: 440, delay: 0.40 }
+                ]
+            },
+            'layout-2': {
+                name: 'Фон + 2 картинки',
+                slots: [
+                    { id: 'bg',          label: '1. Задний фон',             w: 760, h: 430, bottom: 365, left: 0,   delay: 0.04, isBg: true },
+                    { id: 'left-main',   label: '2. Левая фигура',           w: 290, h: 320, bottom: 80,  left: 90,  delay: 0.22 },
+                    { id: 'right-main',  label: '3. Правая фигура',          w: 290, h: 320, bottom: 80,  left: 380, delay: 0.34 }
+                ]
+            }
+        };
+
+        /* КОЛЛЕКЦИЯ ФИГУРНЫХ ВЫРУБОК (МАСОК) ДЛЯ ЗАДНЕГО ФОНА (760x430 SVG PATHS) */
+        const BG_MASK_PRESETS = {
+            'mountains': {
+                name: '⛰️ Горные пики (Сказочный хребет)',
+                path: 'M 0,430 L 0,185 L 55,125 L 95,152 L 165,62 L 230,130 L 290,82 L 380,12 L 470,88 L 530,48 L 605,128 L 655,92 L 715,148 L 760,175 L 760,430 Z'
+            },
+            'arch': {
+                name: '🏛️ Диснеевская панорамная арка',
+                path: 'M 0,430 L 0,190 Q 0,135 55,135 L 95,135 Q 210,14 380,14 Q 550,14 665,135 L 705,135 Q 760,135 760,190 L 760,430 Z'
+            },
+            'castle': {
+                name: '👑 Корона замка и башни',
+                path: 'M 0,430 L 0,195 L 40,155 L 75,180 L 125,95 L 160,140 L 245,110 Q 310,18 380,10 Q 450,18 515,110 L 600,140 L 635,95 L 685,180 L 720,155 L 760,195 L 760,430 Z'
+            },
+            'forest': {
+                name: '🌲 Лесной свод (Кроны вековых сосен)',
+                path: 'M 0,430 L 0,165 C 35,95 95,80 140,115 C 180,45 265,35 315,78 C 350,15 410,15 445,78 C 495,35 580,45 620,115 C 665,80 725,95 760,165 L 760,430 Z'
+            },
+            'clouds': {
+                name: '☁️ Облачные чертоги (Волны)',
+                path: 'M 0,430 L 0,210 Q 25,135 95,150 Q 145,65 235,95 Q 305,12 380,18 Q 455,12 525,95 Q 615,65 665,150 Q 735,135 760,210 L 760,430 Z'
+            },
+            'triptych': {
+                name: '⚜️ Готический триптих (Три свода)',
+                path: 'M 0,430 L 0,200 Q 55,75 125,65 Q 195,75 235,155 Q 305,15 380,10 Q 455,15 525,155 Q 565,75 635,65 Q 705,75 760,200 L 760,430 Z'
+            },
+            'rect': {
+                name: '▭ Классический прямоугольник',
+                path: 'M 0,430 L 0,24 Q 0,4 20,4 L 740,4 Q 760,4 760,24 L 760,430 Z'
+            }
+        };
+
+        function getBgMaskDataUri(maskKey) {
+            const preset = BG_MASK_PRESETS[maskKey] || BG_MASK_PRESETS['mountains'];
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 430" preserveAspectRatio="none"><path d="${preset.path}" fill="white"/></svg>`;
+            return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
+        }
+
+        function createBgDiecutFrameSvg(maskKey) {
+            const preset = BG_MASK_PRESETS[maskKey] || BG_MASK_PRESETS['mountains'];
+            const svgNS = 'http://www.w3.org/2000/svg';
+            const svgEl = document.createElementNS(svgNS, 'svg');
+            svgEl.setAttribute('viewBox', '0 0 760 430');
+            svgEl.setAttribute('preserveAspectRatio', 'none');
+            svgEl.setAttribute('class', 'bg-diecut-frame');
+            svgEl.innerHTML = `
+                <path d="${preset.path}" fill="none" stroke="rgba(255, 244, 214, 0.72)" stroke-width="3.2" stroke-linejoin="round"/>
+                <path d="${preset.path}" fill="none" stroke="rgba(180, 125, 38, 0.55)" stroke-width="1.4" stroke-dasharray="6 4" stroke-linejoin="round"/>
+            `;
+            return svgEl;
+        }
+
+        /* SAVED_STATE_START */
+        const bookData = {
+    "currentPageIndex": 0,
+    "currentDialogIndex": 0,
+    "isOpen": false,
+    "isAnimating": false,
+    "readerOnlyMode": true,
+    "typography": {
+        "headingFont": "'Ruslan Display', Georgia, serif",
+        "bodyFont": "'Alice', Georgia, serif",
+        "bodySize": 16
+    },
+    "camera": {
+        "zoom": 1.3,
+        "offsetY": 0,
+        "standeeAngle": -56
+    },
+    "customTextures": {
+        "--room-tex": "room.png",
+        "--cover-tex": "cover.png",
+        "--paper-tex": "paper.png"
+    },
+    "embeddedVault": {},
+    "pages": [
+        {
+            "chapter": "ГЛАВА I • ШЕПЧУЩИЙ ЛЕС",
+            "layout": "layout-5",
+            "weather": "snow",
+            "traveler": "none",
+            "dialogs": [
+                {
+                    "text": "В некотором царстве, на самом краю Шепчущего леса, где вековые сосны задевают верхушками серебряный месяц, шёл по тропинке юный путник с тёплым фонарём в руке.",
+                    "targetSlot": "left-front"
+                },
+                {
+                    "text": "Старая лесная сосна тихонько зашумела хвойными ветвями, словно нашёптывая мальчику древнюю тайну, которую хранили здешние мхи да звёзды.",
+                    "targetSlot": "left-back"
+                },
+                {
+                    "text": "И вдруг на опушке выросла уютная лесная таверна! В её резных окошках приветливо заплясал золотой огонёк очага, обещая путнику тёплый хлеб и добрые сказки.",
+                    "targetSlot": "center"
+                },
+                {
+                    "text": "У замшелого перекрёстка деревянный указатель скрипуче повернул стрелку на восток — туда, где за синими хребтами дремали облачные чертоги.",
+                    "targetSlot": "right-back"
+                },
+                {
+                    "text": "А у самых корней засветились лазурным светом дивные сказочные грибы, указывая заветную стезю к следующей странице нашей книги...",
+                    "targetSlot": "right-front"
+                }
+            ],
+            "images": {
+                "bg": "mountains.png",
+                "left-back": "tree-left.png",
+                "right-back": "tree-right.png",
+                "center": "tavern.png",
+                "left-front": "hero.png",
+                "right-front": "mushrooms.png"
+            },
+            "slotSettings": {
+                "bg": {
+                    "scale": 1,
+                    "heightPct": 100,
+                    "offsetX": 0,
+                    "offsetY": 0,
+                    "maskShape": "clouds"
+                },
+                "left-back": {
+                    "scale": 1,
+                    "offsetX": 0,
+                    "offsetY": 0
+                },
+                "right-back": {
+                    "scale": 0.95,
+                    "offsetX": 0,
+                    "offsetY": 0
+                },
+                "center": {
+                    "scale": 1,
+                    "offsetX": 0,
+                    "offsetY": 0
+                },
+                "left-front": {
+                    "scale": 1.05,
+                    "offsetX": 0,
+                    "offsetY": 0
+                },
+                "right-front": {
+                    "scale": 0.58,
+                    "offsetX": 0,
+                    "offsetY": 0
+                }
+            }
+        },
+        {
+            "chapter": "ГЛАВА II • ЗАМОК В ОБЛАКАХ",
+            "layout": "layout-3",
+            "weather": "snow",
+            "traveler": "yarn",
+            "dialogs": [
+                {
+                    "text": "Лишь перевернулся бумажный лист, как с ночного неба закружились пушистые снежинки, а путеводный клубочек покатился по серебристому мосту.",
+                    "targetSlot": "left-front"
+                },
+                {
+                    "text": "Перед глазами путника вознёсся Замок в Облаках — его шпили сияли в лунном свете, словно выточенные из горного хрусталя и звёздной пыли.",
+                    "targetSlot": "center"
+                },
+                {
+                    "text": "Навстречу гостю расправил крылья древний крылатый страж, но вместо пламени выдохнул облачко золотых искр, приглашая войти в сказку.",
+                    "targetSlot": "right-front"
+                }
+            ],
+            "images": {
+                "bg": "mountains.png",
+                "center": "castle.png",
+                "left-front": "hero.png",
+                "right-front": "dragon.png"
+            },
+            "slotSettings": {
+                "bg": {
+                    "scale": 1,
+                    "heightPct": 100,
+                    "offsetX": 0,
+                    "offsetY": 0,
+                    "maskShape": "arch"
+                },
+                "center": {
+                    "scale": 1.05,
+                    "offsetX": 0,
+                    "offsetY": 0
+                },
+                "left-front": {
+                    "scale": 1,
+                    "offsetX": 0,
+                    "offsetY": 0
+                },
+                "right-front": {
+                    "scale": 0.9,
+                    "offsetX": 0,
+                    "offsetY": 0
+                }
+            }
+        }
+    ]
+};
+        /* SAVED_STATE_END */
+
+        const bookElement = document.getElementById('bookElement');
+        const popupStage = document.getElementById('popupStage');
+        const turningLeaf = document.getElementById('turningLeaf');
+        const startCtaWrapper = document.getElementById('startCtaWrapper');
+        const storyReaderPanel = document.getElementById('storyReaderPanel');
+
+        /* ==========================================================================
+           MODULE 10: IMAGE RESOLVER & LIVE PREVIEW CACHE
+           ========================================================================== */
+        if (!bookData.embeddedVault) bookData.embeddedVault = {};
+
+        function cleanFileName(path) {
+            if (!path || path.startsWith('data:')) return path;
+            return path.split('/').pop().split('\\').pop().trim();
+        }
+
+        function resolveImageSrc(src) {
+            if (!src) return '';
+            if (src.startsWith('data:')) return src;
+            const key = cleanFileName(src);
+            return bookData.embeddedVault[key] || bookData.embeddedVault[src] || src;
+        }
+
+        function applyVaultToScene() {
+            const root = document.documentElement;
+            ['--room-tex', '--cover-tex', '--paper-tex'].forEach(cssVar => {
+                const rawVal = bookData.customTextures[cssVar];
+                const resolved = resolveImageSrc(rawVal);
+                if (resolved) {
+                    root.style.setProperty(cssVar, `url('${resolved}')`);
+                }
+            });
+        }
+
+        function updatePackStatusUI() {
+            const badge = document.getElementById('packStatusBadge');
+            if (!badge) return;
+            badge.innerHTML = `✨ Все ваши настройки (текст, главы, маски вырубки фона, размеры, позиции 3D-фигур, шрифты и имена картинок) сохраняются внутрь скачанного <b>index.html</b>.`;
+        }
+
+        /* ==========================================================================
+           MODULE 11: PAGE ACTION TRAVELER ENGINE (ФЕЯ, КЛУБОК С НИТЬЮ, ШАРИК)
+           ========================================================================== */
+        const actionCanvas = document.getElementById('actionCanvas');
+        const actCtx = actionCanvas.getContext('2d');
+
+        const travelerState = {
+            type: 'fairy',
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2,
+            startX: window.innerWidth / 2,
+            startY: window.innerHeight / 2,
+            targetX: window.innerWidth / 2,
+            targetY: window.innerHeight / 2,
+            progress: 1,
+            angle: 0,
+            yarnRotation: 0,
+            sparkles: [],
+            visitedAnchors: []
+        };
+
+        function resizeActionCanvas() {
+            actionCanvas.width = window.innerWidth;
+            actionCanvas.height = window.innerHeight;
+        }
+
+        function getSlotScreenAnchor(slotId) {
+            let slotEl = popupStage.querySelector(`.popup-slot[data-slot-id="${slotId}"]`);
+            if (!slotEl) {
+                const allNonBg = popupStage.querySelectorAll('.popup-slot:not(.is-bg-slot)');
+                if (allNonBg.length > 0) slotEl = allNonBg[0];
+            }
+            if (!slotEl) {
+                return { x: window.innerWidth / 2, y: window.innerHeight * 0.48 };
+            }
+            const rect = slotEl.getBoundingClientRect();
+            return {
+                x: rect.left + rect.width * 0.5,
+                y: rect.top + rect.height * 0.42
+            };
+        }
+
+        function getAllPageSlotAnchors() {
+            const slots = Array.from(popupStage.querySelectorAll('.popup-slot:not(.is-bg-slot)'));
+            return slots.map(el => {
+                const r = el.getBoundingClientRect();
+                return {
+                    id: el.dataset.slotId,
+                    x: r.left + r.width * 0.5,
+                    y: r.top + r.height * 0.48
+                };
+            });
+        }
+
+        function triggerTravelerToCurrentDialog(instant = false) {
+            const page = bookData.pages[bookData.currentPageIndex];
+            if (!page) return;
+            travelerState.type = page.traveler || 'none';
+            updateTravelerPillsUI();
+
+            const dialogs = getNormalizedDialogs(page);
+            const currentDlg = dialogs[bookData.currentDialogIndex] || dialogs[0];
+            const preset = LAYOUT_PRESETS[page.layout] || LAYOUT_PRESETS['layout-5'];
+            const nonBgSlots = preset.slots.filter(s => !s.isBg);
+
+            let targetSlotId = currentDlg && currentDlg.targetSlot && currentDlg.targetSlot !== 'auto'
+                ? currentDlg.targetSlot
+                : (nonBgSlots[bookData.currentDialogIndex % nonBgSlots.length]?.id || 'center');
+
+            const dest = getSlotScreenAnchor(targetSlotId);
+
+            if (instant) {
+                travelerState.x = dest.x;
+                travelerState.y = dest.y;
+                travelerState.startX = dest.x;
+                travelerState.startY = dest.y;
+                travelerState.targetX = dest.x;
+                travelerState.targetY = dest.y;
+                travelerState.progress = 1;
+                travelerState.visitedAnchors = [targetSlotId];
+            } else {
+                travelerState.startX = travelerState.x;
+                travelerState.startY = travelerState.y;
+                travelerState.targetX = dest.x;
+                travelerState.targetY = dest.y;
+                travelerState.progress = 0;
+                if (travelerState.visitedAnchors[travelerState.visitedAnchors.length - 1] !== targetSlotId) {
+                    travelerState.visitedAnchors.push(targetSlotId);
+                    if (travelerState.visitedAnchors.length > 6) travelerState.visitedAnchors.shift();
+                }
+            }
+        }
+
+        function spawnActionSparkle(x, y, color = '#ffe58f') {
+            travelerState.sparkles.push({
+                x: x + (Math.random() - 0.5) * 14,
+                y: y + (Math.random() - 0.5) * 14,
+                vx: (Math.random() - 0.5) * 1.1,
+                vy: 0.3 + Math.random() * 1.0,
+                r: 1.5 + Math.random() * 2.8,
+                alpha: 1,
+                color
+            });
+        }
+
+        function drawFairy(ctx, x, y, time) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            const wingFlap = Math.sin(time * 0.022) * 0.45;
+            ctx.fillStyle = 'rgba(255, 248, 220, 0.65)';
+            ctx.strokeStyle = 'rgba(243, 200, 107, 0.85)';
+            ctx.lineWidth = 1;
+
+            ctx.save();
+            ctx.rotate(-0.5 + wingFlap);
+            ctx.beginPath();
+            ctx.ellipse(-10, -4, 11, 5.5, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.save();
+            ctx.rotate(0.5 - wingFlap);
+            ctx.beginPath();
+            ctx.ellipse(10, -4, 11, 5.5, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.fillStyle = 'rgba(255, 235, 180, 0.45)';
+            ctx.save();
+            ctx.rotate(-0.3 + wingFlap * 0.7);
+            ctx.beginPath();
+            ctx.ellipse(-7, 4, 7, 3.5, -0.4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            ctx.save();
+            ctx.rotate(0.3 - wingFlap * 0.7);
+            ctx.beginPath();
+            ctx.ellipse(7, 4, 7, 3.5, 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            const glow = ctx.createRadialGradient(0, 0, 1, 0, 0, 22);
+            glow.addColorStop(0, 'rgba(255, 252, 230, 1)');
+            glow.addColorStop(0.35, 'rgba(255, 215, 110, 0.85)');
+            glow.addColorStop(1, 'rgba(243, 200, 107, 0)');
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(0, 0, 22, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#fff9e6';
+            ctx.beginPath();
+            ctx.arc(0, -4, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(0, -1);
+            ctx.lineTo(-4.5, 8);
+            ctx.lineTo(4.5, 8);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawYarnBall(ctx, x, y, rotation) {
+            if (travelerState.visitedAnchors.length > 0) {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(243, 200, 107, 0.78)';
+                ctx.lineWidth = 2.4;
+                ctx.shadowColor = 'rgba(255, 200, 90, 0.9)';
+                ctx.shadowBlur = 10;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                ctx.beginPath();
+                const firstPt = getSlotScreenAnchor(travelerState.visitedAnchors[0]);
+                ctx.moveTo(firstPt.x, firstPt.y + 18);
+
+                for (let i = 1; i < travelerState.visitedAnchors.length; i++) {
+                    const pt = getSlotScreenAnchor(travelerState.visitedAnchors[i]);
+                    const prev = getSlotScreenAnchor(travelerState.visitedAnchors[i - 1]);
+                    const midX = (prev.x + pt.x) / 2;
+                    const midY = (prev.y + pt.y) / 2 + 28;
+                    ctx.quadraticCurveTo(midX, midY, pt.x, pt.y + 18);
+                }
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rotation);
+
+            const aura = ctx.createRadialGradient(0, 0, 4, 0, 0, 22);
+            aura.addColorStop(0, 'rgba(255, 215, 110, 0.7)');
+            aura.addColorStop(1, 'rgba(243, 200, 107, 0)');
+            ctx.fillStyle = aura;
+            ctx.beginPath();
+            ctx.arc(0, 0, 22, 0, Math.PI * 2);
+            ctx.fill();
+
+            const ballGrad = ctx.createRadialGradient(-3, -3, 2, 0, 0, 12);
+            ballGrad.addColorStop(0, '#ffe699');
+            ballGrad.addColorStop(0.55, '#d4942a');
+            ballGrad.addColorStop(1, '#7d4e0d');
+            ctx.fillStyle = ballGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, 11, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(255, 245, 200, 0.75)';
+            ctx.lineWidth = 1.3;
+            for (let i = 0; i < 4; i++) {
+                ctx.beginPath();
+                ctx.arc(0, 0, 9.5, i * 0.8, i * 0.8 + 1.8);
+                ctx.stroke();
+            }
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 10, 5, 0.5, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 10, 5, -0.6, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawGoldenOrb(ctx, x, y, time) {
+            ctx.save();
+            ctx.translate(x, y);
+            const pulse = 1 + Math.sin(time * 0.008) * 0.15;
+
+            const grad = ctx.createRadialGradient(0, 0, 1, 0, 0, 24 * pulse);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.25, '#ffe57f');
+            grad.addColorStop(0.6, 'rgba(243, 180, 60, 0.55)');
+            grad.addColorStop(1, 'rgba(243, 180, 60, 0)');
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(0, 0, 24 * pulse, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(255, 240, 180, 0.6)';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(0, 0, 10 * pulse, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawGoldenThreadConstellation(ctx, time) {
+            const pts = getAllPageSlotAnchors();
+            if (pts.length < 2) return;
+
+            ctx.save();
+            ctx.strokeStyle = 'rgba(243, 200, 107, 0.55)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 6]);
+            ctx.lineDashOffset = -time * 0.03;
+            ctx.shadowColor = 'rgba(255, 210, 100, 0.8)';
+            ctx.shadowBlur = 8;
+
+            ctx.beginPath();
+            ctx.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) {
+                const prev = pts[i - 1];
+                const curr = pts[i];
+                const cx = (prev.x + curr.x) / 2;
+                const cy = Math.min(prev.y, curr.y) - 35;
+                ctx.quadraticCurveTo(cx, cy, curr.x, curr.y);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function animatePageAction(timestamp) {
+            actCtx.clearRect(0, 0, actionCanvas.width, actionCanvas.height);
+
+            if (bookData.isOpen) {
+                syncReaderPanelToBook();
+            }
+
+            if (bookData.isOpen && !bookData.isAnimating && travelerState.type !== 'none') {
+                const page = bookData.pages[bookData.currentPageIndex];
+                const dialogs = getNormalizedDialogs(page);
+                const currentDlg = dialogs[bookData.currentDialogIndex] || dialogs[0];
+                const preset = LAYOUT_PRESETS[page.layout] || LAYOUT_PRESETS['layout-5'];
+                const nonBgSlots = preset.slots.filter(s => !s.isBg);
+                const targetSlotId = currentDlg && currentDlg.targetSlot && currentDlg.targetSlot !== 'auto'
+                    ? currentDlg.targetSlot
+                    : (nonBgSlots[bookData.currentDialogIndex % nonBgSlots.length]?.id || 'center');
+
+                const liveAnchor = getSlotScreenAnchor(targetSlotId);
+                travelerState.targetX = liveAnchor.x;
+                travelerState.targetY = liveAnchor.y;
+
+                if (travelerState.progress < 1) {
+                    travelerState.progress = Math.min(1, travelerState.progress + 0.022);
+                    const t = travelerState.progress;
+                    const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                    const arcLift = Math.sin(t * Math.PI) * -65;
+
+                    travelerState.x = travelerState.startX + (travelerState.targetX - travelerState.startX) * ease;
+                    travelerState.y = travelerState.startY + (travelerState.targetY - travelerState.startY) * ease + arcLift;
+                    travelerState.yarnRotation += 0.18;
+
+                    if (Math.random() > 0.25) {
+                        spawnActionSparkle(travelerState.x, travelerState.y);
+                    }
+                } else {
+                    const hoverX = Math.cos(timestamp * 0.0025) * 26;
+                    const hoverY = Math.sin(timestamp * 0.005) * 11;
+                    travelerState.x = travelerState.targetX + hoverX;
+                    travelerState.y = travelerState.targetY + hoverY;
+                    travelerState.yarnRotation += 0.03;
+
+                    if (Math.random() > 0.72) {
+                        spawnActionSparkle(travelerState.x, travelerState.y);
+                    }
+                }
+
+                for (let i = travelerState.sparkles.length - 1; i >= 0; i--) {
+                    const sp = travelerState.sparkles[i];
+                    sp.x += sp.vx;
+                    sp.y += sp.vy;
+                    sp.alpha -= 0.022;
+                    if (sp.alpha <= 0) {
+                        travelerState.sparkles.splice(i, 1);
+                        continue;
+                    }
+                    actCtx.save();
+                    actCtx.globalAlpha = sp.alpha;
+                    actCtx.fillStyle = sp.color;
+                    actCtx.beginPath();
+                    actCtx.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2);
+                    actCtx.fill();
+                    actCtx.restore();
+                }
+
+                if (travelerState.type === 'fairy') {
+                    drawFairy(actCtx, travelerState.x, travelerState.y, timestamp);
+                } else if (travelerState.type === 'yarn') {
+                    drawYarnBall(actCtx, travelerState.x, travelerState.y, travelerState.yarnRotation);
+                } else if (travelerState.type === 'orb') {
+                    drawGoldenOrb(actCtx, travelerState.x, travelerState.y, timestamp);
+                } else if (travelerState.type === 'thread') {
+                    drawGoldenThreadConstellation(actCtx, timestamp);
+                    drawGoldenOrb(actCtx, travelerState.x, travelerState.y, timestamp);
+                }
+            }
+
+            requestAnimationFrame(animatePageAction);
+        }
+
+        /* ==========================================================================
+           MODULE 12: WEATHER & MAGIC PARTICLE ENGINE
+           ========================================================================== */
+        const weatherCanvas = document.getElementById('weatherCanvas');
+        const ctx = weatherCanvas.getContext('2d');
+        let currentWeatherType = 'fireflies';
+        let particles = [];
+
+        function resizeWeatherCanvas() {
+            weatherCanvas.width = window.innerWidth;
+            weatherCanvas.height = window.innerHeight;
+        }
+
+        function createParticle(type, randomY = true) {
+            const w = weatherCanvas.width;
+            const h = weatherCanvas.height;
+
+            if (type === 'snow') {
+                return {
+                    x: Math.random() * w,
+                    y: randomY ? Math.random() * h : -20,
+                    r: 2 + Math.random() * 5.5,
+                    vy: 0.8 + Math.random() * 1.8,
+                    vx: (Math.random() - 0.5) * 0.7,
+                    swing: Math.random() * Math.PI * 2,
+                    swingSpeed: 0.015 + Math.random() * 0.025,
+                    alpha: 0.45 + Math.random() * 0.55
+                };
+            } else if (type === 'rain') {
+                return {
+                    x: Math.random() * (w + 200) - 100,
+                    y: randomY ? Math.random() * h : -30,
+                    len: 16 + Math.random() * 20,
+                    vy: 11 + Math.random() * 7,
+                    vx: 2.2 + Math.random() * 1.0,
+                    alpha: 0.25 + Math.random() * 0.35
+                };
+            } else if (type === 'flowers' || type === 'autumn') {
+                return {
+                    x: Math.random() * w,
+                    y: randomY ? Math.random() * h : -25,
+                    size: 7 + Math.random() * 8,
+                    vy: 0.9 + Math.random() * 1.4,
+                    vx: -0.4 + Math.random() * 1.2,
+                    angle: Math.random() * Math.PI * 2,
+                    spin: (Math.random() - 0.5) * 0.04,
+                    swing: Math.random() * Math.PI * 2,
+                    swingSpeed: 0.02 + Math.random() * 0.02,
+                    isFullFlower: Math.random() > 0.45,
+                    hue: type === 'flowers' ? (330 + Math.random() * 25) : (22 + Math.random() * 28),
+                    alpha: 0.75 + Math.random() * 0.25
+                };
+            } else {
+                return {
+                    x: Math.random() * w,
+                    y: randomY ? Math.random() * h : h + 15,
+                    r: 1.8 + Math.random() * 3.2,
+                    vy: -(0.35 + Math.random() * 0.85),
+                    vx: (Math.random() - 0.5) * 0.6,
+                    pulse: Math.random() * Math.PI * 2,
+                    pulseSpeed: 0.03 + Math.random() * 0.04
+                };
+            }
+        }
+
+        function setWeatherEffect(type) {
+            currentWeatherType = type || 'none';
+            particles = [];
+            if (currentWeatherType === 'none') return;
+
+            const counts = { snow: 75, rain: 95, flowers: 40, autumn: 35, fireflies: 38 };
+            const total = counts[currentWeatherType] || 38;
+            for (let i = 0; i < total; i++) {
+                particles.push(createParticle(currentWeatherType, true));
+            }
+            updateWeatherPillsUI();
+        }
+
+        function drawFlowerShape(ctx, size, isFullFlower, hue, alpha) {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            if (isFullFlower && currentWeatherType === 'flowers') {
+                ctx.fillStyle = `hsl(${hue}, 90%, 86%)`;
+                for (let i = 0; i < 5; i++) {
+                    ctx.beginPath();
+                    ctx.rotate((Math.PI * 2) / 5);
+                    ctx.ellipse(0, size * 0.55, size * 0.36, size * 0.6, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.beginPath();
+                ctx.fillStyle = '#ffe082';
+                ctx.arc(0, 0, size * 0.22, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.fillStyle = currentWeatherType === 'flowers' ? `hsl(${hue}, 88%, 84%)` : `hsl(${hue}, 85%, 56%)`;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, size * 0.55, size * 0.9, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function animateWeather() {
+            ctx.clearRect(0, 0, weatherCanvas.width, weatherCanvas.height);
+
+            if (currentWeatherType !== 'none') {
+                const w = weatherCanvas.width;
+                const h = weatherCanvas.height;
+
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+
+                    if (currentWeatherType === 'snow') {
+                        p.swing += p.swingSpeed;
+                        p.x += Math.sin(p.swing) * 0.65 + p.vx;
+                        p.y += p.vy;
+
+                        ctx.save();
+                        ctx.globalAlpha = p.alpha;
+                        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+                        grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+                        grad.addColorStop(0.6, 'rgba(230, 244, 255, 0.8)');
+                        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+
+                        if (p.y > h + 20) particles[i] = createParticle('snow', false);
+                    }
+                    else if (currentWeatherType === 'rain') {
+                        p.x += p.vx;
+                        p.y += p.vy;
+
+                        ctx.save();
+                        ctx.strokeStyle = `rgba(195, 225, 255, ${p.alpha})`;
+                        ctx.lineWidth = 1.4;
+                        ctx.lineCap = 'round';
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p.x - p.vx * 1.4, p.y - p.len);
+                        ctx.stroke();
+                        ctx.restore();
+
+                        if (p.y > h + 30) particles[i] = createParticle('rain', false);
+                    }
+                    else if (currentWeatherType === 'flowers' || currentWeatherType === 'autumn') {
+                        p.swing += p.swingSpeed;
+                        p.angle += p.spin;
+                        p.x += Math.sin(p.swing) * 0.9 + p.vx;
+                        p.y += p.vy;
+
+                        ctx.save();
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate(p.angle);
+                        drawFlowerShape(ctx, p.size, p.isFullFlower, p.hue, p.alpha);
+                        ctx.restore();
+
+                        if (p.y > h + 30 || p.x > w + 40 || p.x < -40) {
+                            particles[i] = createParticle(currentWeatherType, false);
+                        }
+                    }
+                    else if (currentWeatherType === 'fireflies') {
+                        p.pulse += p.pulseSpeed;
+                        p.x += Math.sin(p.pulse * 0.7) * 0.4 + p.vx;
+                        p.y += p.vy;
+                        const alpha = 0.25 + (Math.sin(p.pulse) + 1) * 0.37;
+
+                        ctx.save();
+                        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3);
+                        grad.addColorStop(0, `rgba(255, 240, 170, ${alpha})`);
+                        grad.addColorStop(0.4, `rgba(243, 200, 107, ${alpha * 0.7})`);
+                        grad.addColorStop(1, 'rgba(243, 200, 107, 0)');
+                        ctx.fillStyle = grad;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+
+                        if (p.y < -20) particles[i] = createParticle('fireflies', false);
+                    }
+                }
+            }
+            requestAnimationFrame(animateWeather);
+        }
+
+        /* ==========================================================================
+           MODULE 13: BOOTLOADER, CAMERA FRAMING & FLUSH READER PANEL DOCKING
+           ========================================================================== */
+        function bootStorybookApp() {
+            applySavedSettingsOnBoot();
+            resizeWeatherCanvas();
+            resizeActionCanvas();
+            updateResponsiveScale();
+
+            window.addEventListener('resize', () => {
+                resizeWeatherCanvas();
+                resizeActionCanvas();
+                updateResponsiveScale();
+            });
+
+            renderSpreadPopups(bookData.currentPageIndex);
+            initBuilderUI();
+            setWeatherEffect('fireflies');
+            requestAnimationFrame(animateWeather);
+            requestAnimationFrame(animatePageAction);
+
+            setTimeout(() => {
+                bookElement.classList.remove('state-floating');
+                bookElement.classList.add('state-closed');
+            }, 250);
+        }
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', bootStorybookApp);
+        } else {
+            bootStorybookApp();
+        }
+
+        function applySavedSettingsOnBoot() {
+            const root = document.documentElement;
+            if (bookData.readerOnlyMode) {
+                document.body.classList.add('reader-only-mode');
+            }
+            if (bookData.typography) {
+                root.style.setProperty('--font-heading', bookData.typography.headingFont);
+                root.style.setProperty('--font-body', bookData.typography.bodyFont);
+                root.style.setProperty('--font-body-size', `${bookData.typography.bodySize}px`);
+                document.getElementById('selectHeadingFont').value = bookData.typography.headingFont;
+                document.getElementById('selectBodyFont').value = bookData.typography.bodyFont;
+                document.getElementById('rangeFontSize').value = bookData.typography.bodySize;
+                document.getElementById('lblFontSize').textContent = bookData.typography.bodySize;
+            }
+            if (bookData.camera) {
+                document.getElementById('rangeZoom').value = bookData.camera.zoom;
+                document.getElementById('lblMobileZoom').textContent = bookData.camera.zoom.toFixed(2);
+                document.getElementById('rangeBookY').value = bookData.camera.offsetY;
+                document.getElementById('lblBookY').textContent = bookData.camera.offsetY;
+                document.getElementById('rangeAngle').value = bookData.camera.standeeAngle;
+                document.getElementById('lblStandeeAngle').textContent = bookData.camera.standeeAngle;
+                root.style.setProperty('--standee-angle', `${bookData.camera.standeeAngle}deg`);
+            }
+            applyVaultToScene();
+        }
+
+        /* Точная привязка блока текста сказки вплотную к нижней кромке открытой книги */
+        function syncReaderPanelToBook() {
+            const bindingEl = document.getElementById('leatherBindingBase');
+            const rightPageEl = document.getElementById('paperRightElement');
+            const leftPageEl = document.getElementById('paperLeftElement');
+            if (!bindingEl || !rightPageEl) return;
+
+            const bindingRect = bindingEl.getBoundingClientRect();
+            const rightRect = rightPageEl.getBoundingClientRect();
+            const leftRect = leftPageEl ? leftPageEl.getBoundingClientRect() : rightRect;
+
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+
+            // Нижний край книги (по кожаному переплёту/страницам)
+            const bookBottomY = Math.max(bindingRect.bottom, rightRect.bottom);
+            // Полная ширина раскрытой книги
+            const spreadWidth = Math.max(bindingRect.width, rightRect.right - leftRect.left);
+
+            // Верхний край панели текста встаёт ровно к нижнему краю книги (не больше и не меньше)
+            const clampedTop = Math.min(vh - 115, Math.max(Math.round(vh * 0.48), Math.round(bookBottomY - 2)));
+            const clampedWidth = Math.min(vw * 0.96, Math.max(300, Math.round(spreadWidth)));
+
+            const root = document.documentElement;
+            root.style.setProperty('--reader-top', `${clampedTop}px`);
+            root.style.setProperty('--reader-width', `${clampedWidth}px`);
+        }
+
+        function updateResponsiveScale() {
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const aspect = vw / vh;
+            const root = document.documentElement;
+
+            const userZoom = bookData.camera ? bookData.camera.zoom : 1.0;
+            const manualY = bookData.camera ? bookData.camera.offsetY : 0;
+
+            let scale = 1;
+            let offsetY = 0;
+            let popBoost = 1.0;
+
+            if (!bookData.isOpen) {
+                const closedW = (vw * 0.72) / 400;
+                const closedH = (vh * 0.60) / 480;
+                scale = Math.min(closedW, closedH, 1.06);
+                offsetY = -10;
+            } else {
+                const readerReserve = vw <= 768 ? 150 : 165;
+                const availH = vh - readerReserve;
+
+                if (aspect < 0.72) {
+                    const scaleW = (vw * 0.96) / 770;
+                    const scaleH = (availH * 0.92) / 640;
+                    scale = Math.min(scaleW * 1.08, scaleH) * userZoom;
+                    offsetY = Math.round(48 * scale) + manualY;
+                    popBoost = 1.05;
+                } else {
+                    const scaleW = (vw * 0.88) / 810;
+                    const scaleH = (availH * 0.92) / 650;
+                    scale = Math.min(scaleW, scaleH, 1.16) * userZoom;
+                    offsetY = Math.round(52 * scale) + manualY;
+                    popBoost = 1.0;
+                }
+            }
+
+            root.style.setProperty('--rig-scale', scale.toFixed(3));
+            root.style.setProperty('--rig-offset-y', `${offsetY}px`);
+            root.style.setProperty('--pop-scale-boost', popBoost.toFixed(2));
+
+            if (bookData.isOpen) {
+                requestAnimationFrame(syncReaderPanelToBook);
+            }
+        }
+
+        function setStandeeAngle(val) {
+            bookData.camera.standeeAngle = parseInt(val, 10);
+            document.getElementById('lblStandeeAngle').textContent = val;
+            document.documentElement.style.setProperty('--standee-angle', `${val}deg`);
+        }
+
+        function setMobileZoom(val) {
+            bookData.camera.zoom = parseFloat(val);
+            document.getElementById('lblMobileZoom').textContent = bookData.camera.zoom.toFixed(2);
+            updateResponsiveScale();
+        }
+
+        function setBookManualY(val) {
+            bookData.camera.offsetY = parseInt(val, 10);
+            document.getElementById('lblBookY').textContent = bookData.camera.offsetY;
+            updateResponsiveScale();
+        }
+
+        function updateTypographySettings() {
+            const hFont = document.getElementById('selectHeadingFont').value;
+            const bFont = document.getElementById('selectBodyFont').value;
+            const bSize = parseFloat(document.getElementById('rangeFontSize').value);
+
+            bookData.typography.headingFont = hFont;
+            bookData.typography.bodyFont = bFont;
+            bookData.typography.bodySize = bSize;
+
+            document.getElementById('lblFontSize').textContent = bSize;
+            const root = document.documentElement;
+            root.style.setProperty('--font-heading', hFont);
+            root.style.setProperty('--font-body', bFont);
+            root.style.setProperty('--font-body-size', `${bSize}px`);
+        }
+
+        /* ==========================================================================
+           MODULE 14: BOOK CHOREOGRAPHY & MULTI-DIALOG NAVIGATION
+           ========================================================================== */
+        function getNormalizedDialogs(page) {
+            if (!page.dialogs || !Array.isArray(page.dialogs) || page.dialogs.length === 0) {
+                page.dialogs = [{ text: page.text || 'Напишите здесь текст вашей сказки...', targetSlot: 'auto' }];
+            }
+            return page.dialogs;
+        }
+
+        function openBookStory() {
+            if (bookData.isOpen || bookData.isAnimating) return;
+            bookData.isAnimating = true;
+            bookData.isOpen = true;
+            bookData.currentDialogIndex = 0;
+            document.body.classList.add('book-is-open');
+
+            startCtaWrapper.classList.add('hidden');
+            updateResponsiveScale();
+
+            const page = bookData.pages[bookData.currentPageIndex];
+            setWeatherEffect(page.weather || 'fireflies');
+
+            bookElement.classList.remove('state-closed', 'popups-active');
+            bookElement.classList.add('state-open');
+
+            setTimeout(() => {
+                syncReaderPanelToBook();
+                bookElement.classList.add('popups-active');
+                storyReaderPanel.classList.add('visible');
+                updateStoryReaderUI();
+                bookData.isAnimating = false;
+                setTimeout(() => triggerTravelerToCurrentDialog(true), 350);
+            }, 950);
+        }
+
+        function navigateStoryStep(direction) {
+            if (bookData.isAnimating) return;
+            const page = bookData.pages[bookData.currentPageIndex];
+            const dialogs = getNormalizedDialogs(page);
+
+            if (direction > 0) {
+                if (bookData.currentDialogIndex < dialogs.length - 1) {
+                    switchDialogStepOnSamePage(bookData.currentDialogIndex + 1);
+                } else if (bookData.currentPageIndex < bookData.pages.length - 1) {
+                    flipSpreadTransition(bookData.currentPageIndex + 1, 0);
+                }
+            } else {
+                if (bookData.currentDialogIndex > 0) {
+                    switchDialogStepOnSamePage(bookData.currentDialogIndex - 1);
+                } else if (bookData.currentPageIndex > 0) {
+                    const prevPage = bookData.pages[bookData.currentPageIndex - 1];
+                    const prevDialogs = getNormalizedDialogs(prevPage);
+                    flipSpreadTransition(bookData.currentPageIndex - 1, prevDialogs.length - 1);
+                }
+            }
+        }
+
+        function switchDialogStepOnSamePage(newDialogIndex) {
+            const bodyEl = document.getElementById('storyBodyText');
+            bodyEl.classList.add('dialog-switching');
+            bookData.currentDialogIndex = newDialogIndex;
+
+            triggerTravelerToCurrentDialog(false);
+
+            setTimeout(() => {
+                updateStoryReaderUI();
+                bodyEl.classList.remove('dialog-switching');
+            }, 220);
+        }
+
+        function flipSpreadTransition(targetPageIndex, startDialogIndex = 0) {
+            bookData.isAnimating = true;
+            const direction = targetPageIndex > bookData.currentPageIndex ? 'forward' : 'backward';
+
+            bookElement.classList.remove('popups-active');
+
+            setTimeout(() => {
+                turningLeaf.className = 'turning-page-leaf';
+                void turningLeaf.offsetWidth;
+                turningLeaf.classList.add(direction === 'forward' ? 'flipping-forward' : 'flipping-backward');
+
+                setTimeout(() => {
+                    bookData.currentPageIndex = targetPageIndex;
+                    bookData.currentDialogIndex = startDialogIndex;
+                    renderSpreadPopups(targetPageIndex);
+                    updateStoryReaderUI();
+                    syncBuilderWithCurrentPage();
+                    setWeatherEffect(bookData.pages[targetPageIndex].weather || 'none');
+                }, 550);
+
+                setTimeout(() => {
+                    turningLeaf.className = 'turning-page-leaf';
+                    bookElement.classList.add('popups-active');
+                    bookData.isAnimating = false;
+                    setTimeout(() => triggerTravelerToCurrentDialog(true), 350);
+                }, 1150);
+
+            }, 460);
+        }
+
+        /* ==========================================================================
+           MODULE 15: RENDER 3D POP-UP SLOTS, DIE-CUT MASKS & READER UI
+           ========================================================================== */
+        function ensureSlotSettings(page, slot) {
+            if (!page.slotSettings) page.slotSettings = {};
+            if (!page.slotSettings[slot.id]) {
+                page.slotSettings[slot.id] = {
+                    scale: 1.0,
+                    heightPct: 100,
+                    offsetX: 0,
+                    offsetY: 0,
+                    maskShape: slot.isBg ? 'mountains' : 'rect'
+                };
+            }
+            if (slot.isBg && !page.slotSettings[slot.id].maskShape) {
+                page.slotSettings[slot.id].maskShape = 'mountains';
+            }
+            return page.slotSettings[slot.id];
+        }
+
+        function applyBgMaskToSlotElement(slotEl, maskKey) {
+            const imgEl = slotEl.querySelector('img');
+            if (imgEl) {
+                const maskUri = getBgMaskDataUri(maskKey);
+                imgEl.style.webkitMaskImage = maskUri;
+                imgEl.style.maskImage = maskUri;
+            }
+            const standeeEl = slotEl.querySelector('.popup-standee');
+            if (standeeEl) {
+                const oldFrame = standeeEl.querySelector('.bg-diecut-frame');
+                if (oldFrame) oldFrame.remove();
+                standeeEl.appendChild(createBgDiecutFrameSvg(maskKey));
+            }
+        }
+
+        function renderSpreadPopups(pageIndex) {
+            const page = bookData.pages[pageIndex];
+            const preset = LAYOUT_PRESETS[page.layout] || LAYOUT_PRESETS['layout-5'];
+            popupStage.innerHTML = '';
+
+            const skyBg = resolveImageSrc(page.images['bg'] || 'mountains.png');
+            document.documentElement.style.setProperty('--current-sky-tex', `url('${skyBg}')`);
+
+            preset.slots.forEach(slot => {
+                const rawUrl = page.images[slot.id] || '';
+                const imgUrl = resolveImageSrc(rawUrl);
+                const cfg = ensureSlotSettings(page, slot);
+
+                const slotEl = document.createElement('div');
+                slotEl.className = 'popup-slot' + (slot.isBg ? ' is-bg-slot' : '');
+                slotEl.dataset.slotId = slot.id;
+
+                const finalHeight = slot.isBg ? Math.round(slot.h * ((cfg.heightPct || 100) / 100)) : slot.h;
+                slotEl.style.width = `${slot.w}px`;
+                slotEl.style.height = `${finalHeight}px`;
+                slotEl.style.left = `${slot.left + (cfg.offsetX || 0)}px`;
+                slotEl.style.bottom = `${slot.bottom + (cfg.offsetY || 0)}px`;
+                slotEl.style.setProperty('--pop-delay', `${slot.delay}s`);
+                slotEl.style.setProperty('--item-scale', cfg.scale);
+
+                if (!slot.isBg) {
+                    const shadowEl = document.createElement('div');
+                    shadowEl.className = 'popup-ground-shadow';
+                    slotEl.appendChild(shadowEl);
+                }
+
+                const standeeEl = document.createElement('div');
+                standeeEl.className = 'popup-standee';
+
+                const imgEl = document.createElement('img');
+                imgEl.src = imgUrl;
+                imgEl.alt = slot.label;
+
+                imgEl.onerror = function() {
+                    this.style.display = 'none';
+                    const badge = document.createElement('div');
+                    badge.className = 'fallback-badge';
+                    badge.innerHTML = `<strong>${slot.label}</strong><span style="margin-top:4px;opacity:0.75">${cleanFileName(rawUrl) || 'Нет файла'}</span>`;
+                    standeeEl.appendChild(badge);
+                };
+
+                standeeEl.appendChild(imgEl);
+                slotEl.appendChild(standeeEl);
+
+                if (slot.isBg) {
+                    applyBgMaskToSlotElement(slotEl, cfg.maskShape || 'mountains');
+                }
+
+                popupStage.appendChild(slotEl);
+            });
+        }
+
+        function updateSlotTransformLive(slotId, prop, value) {
+            const page = bookData.pages[bookData.currentPageIndex];
+            const preset = LAYOUT_PRESETS[page.layout];
+            const slotDef = preset.slots.find(s => s.id === slotId);
+            if (!slotDef) return;
+
+            const cfg = ensureSlotSettings(page, slotDef);
+            if (prop === 'maskShape') {
+                cfg.maskShape = value;
+            } else {
+                cfg[prop] = parseFloat(value);
+            }
+
+            const slotEl = popupStage.querySelector(`.popup-slot[data-slot-id="${slotId}"]`);
+            if (!slotEl) return;
+
+            if (prop === 'scale') {
+                slotEl.style.setProperty('--item-scale', cfg.scale);
+            } else if (prop === 'offsetX') {
+                slotEl.style.left = `${slotDef.left + cfg.offsetX}px`;
+            } else if (prop === 'offsetY') {
+                slotEl.style.bottom = `${slotDef.bottom + cfg.offsetY}px`;
+            } else if (prop === 'heightPct' && slotDef.isBg) {
+                const newH = Math.round(slotDef.h * (cfg.heightPct / 100));
+                slotEl.style.height = `${newH}px`;
+            } else if (prop === 'maskShape' && slotDef.isBg) {
+                applyBgMaskToSlotElement(slotEl, cfg.maskShape);
+            }
+        }
+
+        function updateStoryReaderUI() {
+            const page = bookData.pages[bookData.currentPageIndex];
+            const dialogs = getNormalizedDialogs(page);
+            if (bookData.currentDialogIndex >= dialogs.length) {
+                bookData.currentDialogIndex = 0;
+            }
+
+            const currentDlg = dialogs[bookData.currentDialogIndex];
+            document.getElementById('storyChapterTitle').textContent = page.chapter;
+            document.getElementById('storyBodyTextInner').textContent = currentDlg.text;
+
+            const dotsContainer = document.getElementById('dialogDotsContainer');
+            dotsContainer.innerHTML = '';
+            if (dialogs.length > 1) {
+                dialogs.forEach((_, idx) => {
+                    const dot = document.createElement('span');
+                    dot.className = 'dialog-dot' + (idx === bookData.currentDialogIndex ? ' active' : '');
+                    dot.title = `Абзац ${idx + 1}`;
+                    dot.onclick = () => switchDialogStepOnSamePage(idx);
+                    dotsContainer.appendChild(dot);
+                });
+            }
+
+            const totalPages = bookData.pages.length;
+            document.getElementById('pageCounterLabel').textContent =
+                `Стр. ${bookData.currentPageIndex + 1} из ${totalPages} • Абзац ${bookData.currentDialogIndex + 1}/${dialogs.length}`;
+
+            const isVeryFirst = (bookData.currentPageIndex === 0 && bookData.currentDialogIndex === 0);
+            const isVeryLast = (bookData.currentPageIndex === totalPages - 1 && bookData.currentDialogIndex === dialogs.length - 1);
+            const isLastDialogOfPage = (bookData.currentDialogIndex === dialogs.length - 1 && bookData.currentPageIndex < totalPages - 1);
+
+            document.getElementById('btnPrevStep').disabled = isVeryFirst;
+            const nextBtn = document.getElementById('btnNextStep');
+            nextBtn.disabled = isVeryLast;
+            nextBtn.textContent = isLastDialogOfPage ? 'Перевернуть лист →' : 'Дальше →';
+        }
+
+        /* ==========================================================================
+           MODULE 16: CONSTRUCTOR UI & CLEAN SETTINGS HTML EXPORTER
+           ========================================================================== */
+        function toggleBuilderDrawer() {
+            document.getElementById('builderDrawer').classList.toggle('open');
+        }
+
+        function initBuilderUI() {
+            renderPageTabs();
+            syncBuilderWithCurrentPage();
+            updateStoryReaderUI();
+            updatePackStatusUI();
+        }
+
+        function renderPageTabs() {
+            const container = document.getElementById('pageTabsContainer');
+            container.innerHTML = '';
+
+            bookData.pages.forEach((p, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-page-tab' + (idx === bookData.currentPageIndex ? ' active' : '');
+                btn.textContent = `Стр. ${idx + 1}`;
+                btn.onclick = () => switchBuilderToPage(idx);
+                container.appendChild(btn);
+            });
+
+            const addBtn = document.createElement('button');
+            addBtn.className = 'btn-add-spread';
+            addBtn.textContent = '+ Стр.';
+            addBtn.onclick = addNewSpreadPage;
+            container.appendChild(addBtn);
+        }
+
+        function switchBuilderToPage(index) {
+            if (index === bookData.currentPageIndex) return;
+            if (bookData.isOpen) {
+                flipSpreadTransition(index, 0);
+            } else {
+                bookData.currentPageIndex = index;
+                bookData.currentDialogIndex = 0;
+                renderSpreadPopups(index);
+                updateStoryReaderUI();
+                syncBuilderWithCurrentPage();
+                setWeatherEffect(bookData.pages[index].weather || 'none');
+            }
+        }
+
+        function addNewSpreadPage() {
+            bookData.pages.push({
+                chapter: `ГЛАВА ${bookData.pages.length + 1} • НОВОЕ ЧУДО`,
+                layout: 'layout-3',
+                weather: 'flowers',
+                traveler: 'fairy',
+                dialogs: [
+                    { text: 'Первый сказочный абзац новой главы...', targetSlot: 'left-front' },
+                    { text: 'Второй абзац истории — фея перелетает к центру сцены...', targetSlot: 'center' }
+                ],
+                images: {
+                    'bg': 'mountains.png',
+                    'center': 'tavern.png',
+                    'left-front': 'hero.png',
+                    'right-front': 'mushrooms.png'
+                },
+                slotSettings: {
+                    'bg': { scale: 1.0, heightPct: 100, offsetX: 0, offsetY: 0, maskShape: 'mountains' }
+                }
+            });
+            switchBuilderToPage(bookData.pages.length - 1);
+            updatePackStatusUI();
+        }
+
+        function selectPageWeather(weatherType) {
+            const page = bookData.pages[bookData.currentPageIndex];
+            page.weather = weatherType;
+            setWeatherEffect(weatherType);
+        }
+
+        function updateWeatherPillsUI() {
+            const page = bookData.pages[bookData.currentPageIndex];
+            const activeFx = page ? (page.weather || 'none') : currentWeatherType;
+            document.querySelectorAll('#weatherPillsGrid .fx-pill-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.fx === activeFx);
+            });
+        }
+
+        function selectPageTraveler(travelerType) {
+            const page = bookData.pages[bookData.currentPageIndex];
+            page.traveler = travelerType;
+            triggerTravelerToCurrentDialog(true);
+        }
+
+        function updateTravelerPillsUI() {
+            const page = bookData.pages[bookData.currentPageIndex];
+            const activeTr = page ? (page.traveler || 'none') : 'none';
+            document.querySelectorAll('#travelerPillsGrid .fx-pill-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tr === activeTr);
+            });
+        }
+
+        function syncBuilderWithCurrentPage() {
+            renderPageTabs();
+            const page = bookData.pages[bookData.currentPageIndex];
+            document.getElementById('layoutSelect').value = page.layout;
+            document.getElementById('inputChapterTitle').value = page.chapter;
+            updateWeatherPillsUI();
+            updateTravelerPillsUI();
+            renderDialogsEditor();
+            renderSlotUploaders();
+        }
+
+        function updateCurrentChapterTitle() {
+            const page = bookData.pages[bookData.currentPageIndex];
+            page.chapter = document.getElementById('inputChapterTitle').value;
+            updateStoryReaderUI();
+        }
+
+        function renderDialogsEditor() {
+            const page = bookData.pages[bookData.currentPageIndex];
+            const dialogs = getNormalizedDialogs(page);
+            const preset = LAYOUT_PRESETS[page.layout] || LAYOUT_PRESETS['layout-5'];
+            const nonBgSlots = preset.slots.filter(s => !s.isBg);
+
+            const listEl = document.getElementById('dialogsEditorList');
+            listEl.innerHTML = '';
+
+            dialogs.forEach((dlg, idx) => {
+                const card = document.createElement('div');
+                card.className = 'dialog-step-card';
+
+                const optionsHtml = [
+                    `<option value="auto" ${(!dlg.targetSlot || dlg.targetSlot === 'auto') ? 'selected' : ''}>🎯 По очереди</option>`,
+                    ...nonBgSlots.map(s => `<option value="${s.id}" ${dlg.targetSlot === s.id ? 'selected' : ''}>🎯 ${s.label}</option>`)
+                ].join('');
+
+                card.innerHTML = `
+                    <div class="dialog-step-header">
+                        <span>Абзац ${idx + 1}</span>
+                        <select onchange="updateDialogTargetSlot(${idx}, this.value)">
+                            ${optionsHtml}
+                        </select>
+                        ${dialogs.length > 1 ? `<button class="btn-del-dialog" onclick="removeDialogStep(${idx})">✕</button>` : ''}
+                    </div>
+                    <textarea rows="2" oninput="updateDialogText(${idx}, this.value)" onfocus="previewDialogStep(${idx})">${dlg.text}</textarea>
+                `;
+                listEl.appendChild(card);
+            });
+        }
+
+        function updateDialogText(idx, val) {
+            const page = bookData.pages[bookData.currentPageIndex];
+            const dialogs = getNormalizedDialogs(page);
+            if (dialogs[idx]) {
+                dialogs[idx].text = val;
+                if (bookData.currentDialogIndex === idx) {
+                    updateStoryReaderUI();
+                }
+            }
+        }
+
+        function updateDialogTargetSlot(idx, slotId) {
+            const page = bookData.pages[bookData.currentPageIndex];
+            const dialogs = getNormalizedDialogs(page);
+            if (dialogs[idx]) {
+                dialogs[idx].targetSlot = slotId;
+                bookData.currentDialogIndex = idx;
+                updateStoryReaderUI();
+                triggerTravelerToCurrentDialog(false);
+            }
+        }
+
+        function previewDialogStep(idx) {
+            if (bookData.currentDialogIndex !== idx) {
+                switchDialogStepOnSamePage(idx);
+            }
+        }
+
+        function addDialogStepToCurrentPage() {
+            const page = bookData.pages[bookData.currentPageIndex];
+            const dialogs = getNormalizedDialogs(page);
+            dialogs.push({
+                text: `Новый сказочный абзац ${dialogs.length + 1}...`,
+                targetSlot: 'auto'
+            });
+            bookData.currentDialogIndex = dialogs.length - 1;
+            renderDialogsEditor();
+            updateStoryReaderUI();
+            triggerTravelerToCurrentDialog(false);
+        }
+
+        function removeDialogStep(idx) {
+            const page = bookData.pages[bookData.currentPageIndex];
+            const dialogs = getNormalizedDialogs(page);
+            if (dialogs.length <= 1) return;
+            dialogs.splice(idx, 1);
+            if (bookData.currentDialogIndex >= dialogs.length) {
+                bookData.currentDialogIndex = dialogs.length - 1;
+            }
+            renderDialogsEditor();
+            updateStoryReaderUI();
+        }
+
+        function promptBulkTextSplit() {
+            const raw = prompt('Вставьте ваш текст (каждый новый абзац с новой строки станет отдельным диалогом по кнопке «Дальше»):');
+            if (!raw || !raw.trim()) return;
+            const lines = raw.split(/\n+/).map(s => s.trim()).filter(Boolean);
+            if (lines.length === 0) return;
+
+            const page = bookData.pages[bookData.currentPageIndex];
+            page.dialogs = lines.map(line => ({ text: line, targetSlot: 'auto' }));
+            bookData.currentDialogIndex = 0;
+            renderDialogsEditor();
+            updateStoryReaderUI();
+            triggerTravelerToCurrentDialog(true);
+        }
+
+        function renderSlotUploaders() {
+            const page = bookData.pages[bookData.currentPageIndex];
+            const preset = LAYOUT_PRESETS[page.layout];
+            const container = document.getElementById('slotsEditorContainer');
+            container.innerHTML = '';
+
+            preset.slots.forEach(slot => {
+                const rawSrc = page.images[slot.id] || '';
+                const resolvedSrc = resolveImageSrc(rawSrc);
+                const cfg = ensureSlotSettings(page, slot);
+
+                const item = document.createElement('div');
+                item.className = 'slot-editor-item';
+
+                const maskOptionsHtml = slot.isBg
+                    ? Object.entries(BG_MASK_PRESETS).map(([key, m]) =>
+                        `<option value="${key}" ${(cfg.maskShape || 'mountains') === key ? 'selected' : ''}>${m.name}</option>`
+                    ).join('')
+                    : '';
+
+                const extraBgControls = slot.isBg ? `
+                    <div class="slider-box" style="grid-column: span 2; margin-top: 2px;">
+                        <span>✂️ Форма вырубки заднего фона (Силуэт-маска)</span>
+                        <select class="builder-select" style="margin-top:3px; padding:6px 8px; font-size:12px;"
+                            onchange="updateSlotTransformLive('${slot.id}', 'maskShape', this.value)">
+                            ${maskOptionsHtml}
+                        </select>
+                    </div>
+                    <div class="slider-box" style="grid-column: span 2;">
+                        <span>Высота фона <b><span id="val-h-${slot.id}">${cfg.heightPct || 100}</span>%</b></span>
+                        <input type="range" min="70" max="150" step="5" value="${cfg.heightPct || 100}"
+                            oninput="document.getElementById('val-h-${slot.id}').textContent=this.value; updateSlotTransformLive('${slot.id}', 'heightPct', this.value)">
+                    </div>
+                ` : '';
+
+                item.innerHTML = `
+                    <div class="slot-top-row">
+                        <img class="slot-thumb" src="${resolvedSrc}" onerror="this.style.opacity='0.2'">
+                        <div class="slot-info">
+                            <div class="slot-title">${slot.label}</div>
+                            <div class="slot-file" style="color:#f3c86b">Файл: ${cleanFileName(rawSrc) || 'не выбран'}</div>
+                        </div>
+                        <label class="btn-upload-file">
+                            Заменить
+                            <input type="file" accept="image/*" onchange="uploadSlotImage(event, '${slot.id}')">
+                        </label>
+                    </div>
+                    <div class="slot-sliders-grid">
+                        <div class="slider-box">
+                            <span>Размер <b><span id="val-sc-${slot.id}">${Math.round(cfg.scale * 100)}</span>%</b></span>
+                            <input type="range" min="0.25" max="1.80" step="0.05" value="${cfg.scale}"
+                                oninput="document.getElementById('val-sc-${slot.id}').textContent=Math.round(this.value*100); updateSlotTransformLive('${slot.id}', 'scale', this.value)">
+                        </div>
+                        <div class="slider-box">
+                            <span>Влево/Вправо <b><span id="val-x-${slot.id}">${cfg.offsetX}</span>px</b></span>
+                            <input type="range" min="-180" max="180" step="5" value="${cfg.offsetX}"
+                                oninput="document.getElementById('val-x-${slot.id}').textContent=this.value; updateSlotTransformLive('${slot.id}', 'offsetX', this.value)">
+                        </div>
+                        <div class="slider-box" style="grid-column: span 2;">
+                            <span>Глубина на листе (Ближе / Дальше) <b><span id="val-y-${slot.id}">${cfg.offsetY}</span>px</b></span>
+                            <input type="range" min="-120" max="140" step="5" value="${cfg.offsetY}"
+                                oninput="document.getElementById('val-y-${slot.id}').textContent=this.value; updateSlotTransformLive('${slot.id}', 'offsetY', this.value)">
+                        </div>
+                        ${extraBgControls}
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function changeCurrentPageLayout(newLayoutKey) {
+            const page = bookData.pages[bookData.currentPageIndex];
+            page.layout = newLayoutKey;
+
+            if (bookData.isOpen) {
+                bookElement.classList.remove('popups-active');
+                setTimeout(() => {
+                    renderSpreadPopups(bookData.currentPageIndex);
+                    renderDialogsEditor();
+                    renderSlotUploaders();
+                    updatePackStatusUI();
+                    requestAnimationFrame(() => bookElement.classList.add('popups-active'));
+                }, 420);
+            } else {
+                renderSpreadPopups(bookData.currentPageIndex);
+                renderDialogsEditor();
+                renderSlotUploaders();
+                updatePackStatusUI();
+            }
+        }
+
+        function uploadSlotImage(event, slotId) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const fileName = file.name.trim();
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+                const page = bookData.pages[bookData.currentPageIndex];
+                page.images[slotId] = fileName;
+                bookData.embeddedVault[fileName] = dataUrl;
+                renderSpreadPopups(bookData.currentPageIndex);
+                renderSlotUploaders();
+                updatePackStatusUI();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function uploadGlobalTexture(event, cssVarName) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const fileName = file.name.trim();
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+                bookData.customTextures[cssVarName] = fileName;
+                bookData.embeddedVault[fileName] = dataUrl;
+                document.documentElement.style.setProperty(cssVarName, `url('${dataUrl}')`);
+                updatePackStatusUI();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /* ==========================================================================
+           CLEAN & SAFE STANDALONE HTML EXPORTER
+           ========================================================================== */
+        function exportStandaloneStoryHTML() {
+            const btn = document.getElementById('btnExportStory');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '⏳ Подготовка файла сказки...';
+            btn.disabled = true;
+
+            try {
+                const hideBuilder = document.getElementById('chkHideBuilderInExport').checked;
+
+                const exportState = JSON.parse(JSON.stringify(bookData));
+                exportState.currentPageIndex = 0;
+                exportState.currentDialogIndex = 0;
+                exportState.isOpen = false;
+                exportState.isAnimating = false;
+                exportState.readerOnlyMode = hideBuilder;
+                exportState.embeddedVault = {};
+
+                const cleanDoc = document.documentElement.cloneNode(true);
+                cleanDoc.removeAttribute('style');
+
+                const bodyEl = cleanDoc.querySelector('body');
+                if (bodyEl) bodyEl.className = hideBuilder ? 'reader-only-mode' : '';
+
+                const bookEl = cleanDoc.querySelector('#bookElement');
+                if (bookEl) bookEl.className = 'book state-floating';
+
+                const stageEl = cleanDoc.querySelector('#popupStage');
+                if (stageEl) stageEl.innerHTML = '';
+
+                const leafEl = cleanDoc.querySelector('#turningLeaf');
+                if (leafEl) leafEl.className = 'turning-page-leaf';
+
+                const ctaEl = cleanDoc.querySelector('#startCtaWrapper');
+                if (ctaEl) ctaEl.className = 'start-cta-wrapper';
+
+                const readerEl = cleanDoc.querySelector('#storyReaderPanel');
+                if (readerEl) readerEl.className = 'story-reader-panel';
+
+                const drawerEl = cleanDoc.querySelector('#builderDrawer');
+                if (drawerEl) drawerEl.className = 'builder-drawer';
+
+                let fullHtml = '<!DOCTYPE html>\n' + cleanDoc.outerHTML;
+
+                const stateBlockRegex = /\/\* SAVED_STATE_START \*\/[\s\S]*?\/\* SAVED_STATE_END \*\//;
+                const newStateCode = `/* SAVED_STATE_START */\n        const bookData = ${JSON.stringify(exportState, null, 4)};\n        /* SAVED_STATE_END */`;
+                fullHtml = fullHtml.replace(stateBlockRegex, () => newStateCode);
+
+                const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'index.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } finally {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+
+</body></html>
