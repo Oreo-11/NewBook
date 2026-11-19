@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru" style="--room-tex: url('room.png'); --cover-tex: url('cover.png'); --paper-tex: url('paper.png'); --rig-scale: 0.4345; --user-zoom: 1.250; --pop-scale-boost: 1.000;"><head>
+<html lang="ru"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Живая Книга Сказок — 3D Pop-Up Diorama</title>
@@ -1406,7 +1406,7 @@
         }
     </style>
 </head>
-<body class="book-is-open">
+<body class="">
 
     <!-- MODULE 8: SVG DEFINITIONS -->
     <svg class="svg-defs-Library" aria-hidden="true">
@@ -1428,7 +1428,7 @@
 
         <!-- MODULE 3 & 4: 3D POP-UP BOOK & STANDS -->
         <div class="book-scale-rig" id="bookScaleRig">
-            <div class="book state-open" id="book3D" data-pedestal="ice">
+            <div class="book state-floating" id="book3D" data-pedestal="ice">
 
                 <!-- Свечение от обложки -->
                 <div class="cover-photo-aura" id="coverPhotoAura">
@@ -1474,7 +1474,7 @@
                 </div>
 
                 <!-- Сцена 2.5D Поп-Ап Панорамы -->
-                <div class="popup-spread-stage popups-active" id="popupSpreadStage"><div class="popup-standee is-backdrop-slot mask-arch" data-slot="bg" style="--slot-x: 50%; --slot-y: 54%; --slot-w: 690px; --slot-h: 315px; --stand-angle: -82deg; --slot-scale: 1.08; --step-dx: 0px; --step-dy: 0px; --step-flip: 1;"><div class="standee-page-shadow"></div><div class="standee-card"><img class="standee-img" src="mountains.png" alt="1. Задний фон (mountains.png)"><div class="standee-fallback-badge">mountains.png</div></div><div class="standee-paper-tab"></div></div><div class="popup-standee" data-slot="left-back" style="--slot-x: 18%; --slot-y: 71%; --slot-w: 230px; --slot-h: 275px; --stand-angle: -86deg; --slot-scale: 1.14; --step-dx: 0px; --step-dy: 0px; --step-flip: 1;"><div class="standee-page-shadow"></div><div class="standee-card"><img class="standee-img" src="tree-left.png" alt="2. Дерево слева (tree-left.png)"><div class="standee-fallback-badge">tree-left.png</div></div></div><div class="popup-standee" data-slot="right-back" style="--slot-x: 82%; --slot-y: 71%; --slot-w: 230px; --slot-h: 275px; --stand-angle: -86deg; --slot-scale: 1.14; --step-dx: 0px; --step-dy: 0px; --step-flip: 1;"><div class="standee-page-shadow"></div><div class="standee-card"><img class="standee-img" src="tree-right.png" alt="3. Дерево справа (tree-right.png)"><div class="standee-fallback-badge">tree-right.png</div></div></div><div class="popup-standee step-anim-glow" data-slot="mid-center" style="--slot-x: 64%; --slot-y: 73%; --slot-w: 245px; --slot-h: 235px; --stand-angle: -86deg; --slot-scale: 1.06; --step-dx: 0px; --step-dy: 0px; --step-flip: 1;"><div class="standee-page-shadow"></div><div class="standee-card"><img class="standee-img" src="tavern.png" alt="4. Средний план (tavern.png)"><div class="standee-fallback-badge">tavern.png</div></div></div><div class="popup-standee step-anim-jump" data-slot="front-left" style="--slot-x: 44%; --slot-y: 89%; --slot-w: 162px; --slot-h: 162px; --stand-angle: -88deg; --slot-scale: 1; --step-dx: 0px; --step-dy: 0px; --step-flip: 1;"><div class="standee-page-shadow"></div><div class="standee-card"><img class="standee-img" src="hero.png" alt="5. Герой (hero.png)"><div class="standee-fallback-badge">hero.png</div></div></div><div class="popup-standee step-anim-glow" data-slot="front-right" style="--slot-x: 26%; --slot-y: 89%; --slot-w: 130px; --slot-h: 105px; --stand-angle: -88deg; --slot-scale: 0.82; --step-dx: 0px; --step-dy: 0px; --step-flip: 1;"><div class="standee-page-shadow"></div><div class="standee-card"><img class="standee-img" src="mushrooms.png" alt="6. Деталь (mushrooms.png)"><div class="standee-fallback-badge">mushrooms.png</div></div></div></div>
+                <div class="popup-spread-stage" id="popupSpreadStage"></div>
 
             </div>
         </div>
@@ -1489,339 +1489,29 @@
 
     <section class="story-reader-panel" id="storyReaderPanel">
         <div class="reader-header-bar">
-            <div class="chapter-title-text" id="chapterTitleText">Глава IV. Рассвет над Хребтом</div>
+            <div class="chapter-title-text" id="chapterTitleText">Глава III. Тайна Светящейся Поляны</div>
             <div class="reader-progress-Right">
-                <div class="dialog-dots" id="dialogDots"><span class="dialog-dot active"></span></div>
-                <span class="page-counter-badge" id="pageCounterBadge">Разворот 4 / 4</span>
+                <div class="dialog-dots" id="dialogDots"><span class="dialog-dot active"></span><span class="dialog-dot"></span></div>
+                <span class="page-counter-badge" id="pageCounterBadge">Разворот 3 / 4</span>
             </div>
         </div>
         <div class="reader-body-viewport">
-            <p class="story-paragraph-text" id="storyParagraphText">Когда первые лучи зари коснулись горных пиков, метель утихла, оставив в воздухе лишь искрящийся хоровод снежинок.</p>
+            <p class="story-paragraph-text" id="storyParagraphText">В глубине чащи волшебные грибы засветились мягким янтарным огнём, указывая путнику скрытую дорогу среди заснеженных елей.</p>
         </div>
         <div class="reader-controls-row">
             <button class="reader-nav-btn" id="prevBtn" type="button">← Назад</button>
             <span class="reader-hint-label" id="readerHintLabel">Листайте стрелками или кнопками</span>
-            <button class="reader-nav-btn primary-next" id="nextBtn" type="button" disabled="">Далее →</button>
+            <button class="reader-nav-btn primary-next" id="nextBtn" type="button">Далее →</button>
         </div>
     </section>
 
     <!-- MODULE 6: BOOK CONSTRUCTOR DRAWER -->
-    <button class="builder-toggle-btn" id="builderToggleBtn" type="button">🛠️ Конструктор книги</button>
+    
 
-    <aside class="builder-drawer is-open" id="builderDrawer">
-        <div class="drawer-header">
-            <h2>🛠️ Конструктор книги</h2>
-            <button class="drawer-close-btn" id="drawerCloseBtn" type="button">✕</button>
-        </div>
-
-        <div class="drawer-tabs">
-            <button class="drawer-tab-btn active" data-tab="tab-spread" type="button">📄 Разворот</button>
-            <button class="drawer-tab-btn" data-tab="tab-director" type="button">🎬 Хореография</button>
-            <button class="drawer-tab-btn" data-tab="tab-global" type="button">✨ Оформление</button>
-        </div>
-
-        <div class="drawer-content">
-            <!-- TAB 1: SPREAD & SLOTS -->
-            <div class="drawer-section active" id="tab-spread">
-                <div class="field-card">
-                    <div class="field-card-title">
-                        <span>Выбор разворота (главы)</span>
-                    </div>
-                    <div class="field-row">
-                        <select class="field-select" id="bSpreadSelect"><option value="0">1. Глава I. Зов Серебряных Вершин</option><option value="1">2. Глава II. Огни Лесной Таверны</option><option value="2">3. Глава III. Тайна Светящейся Поляны</option><option value="3">4. Глава IV. Рассвет над Хребтом</option></select>
-                    </div>
-                    <div class="grid-2col">
-                        <button class="mini-btn" id="bAddSpreadBtn" type="button">+ Добавить главу</button>
-                        <button class="mini-btn danger" id="bDelSpreadBtn" type="button">Удалить главу</button>
-                    </div>
-                    <div class="field-row">
-                        <label>Название главы</label>
-                        <input type="text" class="field-input" id="bSpreadTitle">
-                    </div>
-                    <div class="grid-2col">
-                        <div class="field-row">
-                            <label>Схема (8 макетов)</label>
-                            <select class="field-select" id="bSpreadLayout">
-                                <option value="layout-1">1. Классическая сцена</option>
-                                <option value="layout-2">2. Тропа к таверне</option>
-                                <option value="layout-3">3. Встреча у порога</option>
-                                <option value="layout-4">4. Грибная поляна</option>
-                                <option value="layout-5">5. Горное ущелье</option>
-                                <option value="layout-6">6. Диалог лицом к лицу</option>
-                                <option value="layout-7">7. Сердце зимней чащи</option>
-                                <option value="layout-8">8. Финальный хоровод</option>
-                            </select>
-                        </div>
-                        <div class="field-row">
-                            <label>Маска заднего фона</label>
-                            <select class="field-select" id="bSpreadMask">
-                                <option value="panoramic">Панорама</option>
-                                <option value="arch">Сказочная арка</option>
-                                <option value="triptych">Триптих</option>
-                                <option value="crest">Королевский щит</option>
-                                <option value="none">Прямоугольник</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="field-row">
-                        <label>Погода на развороте</label>
-                        <select class="field-select" id="bSpreadWeather">
-                            <option value="snow">❄️ Снегопад и золотая пыльца</option>
-                            <option value="fireflies">✨ Лесные светлячки</option>
-                            <option value="none">Без осадков</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="field-card">
-                    <div class="field-card-title">🖼️ Декорации и персонажи (6 слотов)</div>
-                    <div id="bSlotsEditorList" style="display:flex;flex-direction:column;gap:10px;"><div style="padding: 8px; border: 1px solid rgba(212, 168, 83, 0.2); border-radius: 8px; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
-                        <span>1. Задний фон (mountains.png)</span>
-                        <label><input type="checkbox" data-slot-en="bg" checked=""> Вкл</label>
-                    </div>
-                    <div class="grid-2col">
-                        <input type="text" class="field-input" data-slot-src="bg" value="mountains.png" placeholder="Файл .png">
-                        <input type="number" class="field-input" data-slot-sc="bg" step="0.05" min="0.4" max="1.8" value="1.08">
-                    </div>
-                </div><div style="padding: 8px; border: 1px solid rgba(212, 168, 83, 0.2); border-radius: 8px; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
-                        <span>2. Дерево слева (tree-left.png)</span>
-                        <label><input type="checkbox" data-slot-en="left-back" checked=""> Вкл</label>
-                    </div>
-                    <div class="grid-2col">
-                        <input type="text" class="field-input" data-slot-src="left-back" value="tree-left.png" placeholder="Файл .png">
-                        <input type="number" class="field-input" data-slot-sc="left-back" step="0.05" min="0.4" max="1.8" value="1.14">
-                    </div>
-                </div><div style="padding: 8px; border: 1px solid rgba(212, 168, 83, 0.2); border-radius: 8px; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
-                        <span>3. Дерево справа (tree-right.png)</span>
-                        <label><input type="checkbox" data-slot-en="right-back" checked=""> Вкл</label>
-                    </div>
-                    <div class="grid-2col">
-                        <input type="text" class="field-input" data-slot-src="right-back" value="tree-right.png" placeholder="Файл .png">
-                        <input type="number" class="field-input" data-slot-sc="right-back" step="0.05" min="0.4" max="1.8" value="1.14">
-                    </div>
-                </div><div style="padding: 8px; border: 1px solid rgba(212, 168, 83, 0.2); border-radius: 8px; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
-                        <span>4. Средний план (tavern.png)</span>
-                        <label><input type="checkbox" data-slot-en="mid-center" checked=""> Вкл</label>
-                    </div>
-                    <div class="grid-2col">
-                        <input type="text" class="field-input" data-slot-src="mid-center" value="tavern.png" placeholder="Файл .png">
-                        <input type="number" class="field-input" data-slot-sc="mid-center" step="0.05" min="0.4" max="1.8" value="1.06">
-                    </div>
-                </div><div style="padding: 8px; border: 1px solid rgba(212, 168, 83, 0.2); border-radius: 8px; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
-                        <span>5. Герой (hero.png)</span>
-                        <label><input type="checkbox" data-slot-en="front-left" checked=""> Вкл</label>
-                    </div>
-                    <div class="grid-2col">
-                        <input type="text" class="field-input" data-slot-src="front-left" value="hero.png" placeholder="Файл .png">
-                        <input type="number" class="field-input" data-slot-sc="front-left" step="0.05" min="0.4" max="1.8" value="1">
-                    </div>
-                </div><div style="padding: 8px; border: 1px solid rgba(212, 168, 83, 0.2); border-radius: 8px; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
-                        <span>6. Деталь (mushrooms.png)</span>
-                        <label><input type="checkbox" data-slot-en="front-right" checked=""> Вкл</label>
-                    </div>
-                    <div class="grid-2col">
-                        <input type="text" class="field-input" data-slot-src="front-right" value="mushrooms.png" placeholder="Файл .png">
-                        <input type="number" class="field-input" data-slot-sc="front-right" step="0.05" min="0.4" max="1.8" value="0.82">
-                    </div>
-                </div></div>
-                </div>
-            </div>
-
-            <!-- TAB 2: STAGE CHOREOGRAPHY DIRECTOR -->
-            <div class="drawer-section" id="tab-director">
-                <div class="field-card">
-                    <div class="field-card-title">🎬 Шаги (абзацы) внутри разворота</div>
-                    <div class="field-row">
-                        <label>Выберите шаг действия</label>
-                        <select class="field-select" id="bStepSelect"><option value="0">Шаг 1: Когда первые лучи зари кос...</option></select>
-                    </div>
-                    <div class="grid-2col">
-                        <button class="mini-btn" id="bAddStepBtn" type="button">+ Шаг сцены</button>
-                        <button class="mini-btn danger" id="bDelStepBtn" type="button">Удалить шаг</button>
-                    </div>
-                    <div class="field-row">
-                        <label>Текст сказки на этом шаге</label>
-                        <textarea class="field-textarea" id="bStepText"></textarea>
-                    </div>
-                </div>
-
-                <div class="field-card">
-                    <div class="field-card-title">🔄 Поменять местами 2 картинки на шаге</div>
-                    <div class="grid-3col">
-                        <select class="field-select" id="bSwapA"><option value="left-back">2. Дерево слева (tree-left.png)</option><option value="right-back">3. Дерево справа (tree-right.png)</option><option value="mid-center">4. Средний план (tavern.png)</option><option value="front-left">5. Герой (hero.png)</option><option value="front-right">6. Деталь (mushrooms.png)</option></select>
-                        <select class="field-select" id="bSwapB"><option value="left-back">2. Дерево слева (tree-left.png)</option><option value="right-back">3. Дерево справа (tree-right.png)</option><option value="mid-center">4. Средний план (tavern.png)</option><option value="front-left">5. Герой (hero.png)</option><option value="front-right">6. Деталь (mushrooms.png)</option></select>
-                        <button class="mini-btn" id="bSwapBtn" type="button">Поменять</button>
-                    </div>
-                </div>
-
-                <div class="field-card">
-                    <div class="field-card-title">🚶 Движение, разворот и анимация на шаге</div>
-                    <div id="bStepActorsList" style="display:flex;flex-direction:column;gap:10px;"><div style="padding: 8px; border: 1px solid rgba(212, 168, 83, 0.2); border-radius: 8px; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
-                        <span>2. Дерево слева (tree-left.png)</span>
-                        <label><input type="checkbox" data-act-flip="left-back"> Разворот 180°</label>
-                    </div>
-                    <div class="grid-3col">
-                        <input type="number" class="field-input" data-act-dx="left-back" value="0" step="10" title="Сдвиг X (px)">
-                        <input type="number" class="field-input" data-act-dy="left-back" value="0" step="5" title="Сдвиг Y (px)">
-                        <select class="field-select" data-act-anim="left-back">
-                            <option value="none" selected="">Спокойно</option>
-                            <option value="walk">🚶 Идёт</option>
-                            <option value="talk">💬 Говорит</option>
-                            <option value="jump">✨ Прыжок</option>
-                            <option value="bow">🙇 Поклон</option>
-                            <option value="shake">🌿 Качание</option>
-                            <option value="glow">🌟 Свечение</option>
-                            <option value="float">☁️ Парение</option>
-                            <option value="hide">👻 Скрыть</option>
-                        </select>
-                    </div>
-                </div><div style="padding: 8px; border: 1px solid rgba(212, 168, 83, 0.2); border-radius: 8px; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
-                        <span>3. Дерево справа (tree-right.png)</span>
-                        <label><input type="checkbox" data-act-flip="right-back"> Разворот 180°</label>
-                    </div>
-                    <div class="grid-3col">
-                        <input type="number" class="field-input" data-act-dx="right-back" value="0" step="10" title="Сдвиг X (px)">
-                        <input type="number" class="field-input" data-act-dy="right-back" value="0" step="5" title="Сдвиг Y (px)">
-                        <select class="field-select" data-act-anim="right-back">
-                            <option value="none" selected="">Спокойно</option>
-                            <option value="walk">🚶 Идёт</option>
-                            <option value="talk">💬 Говорит</option>
-                            <option value="jump">✨ Прыжок</option>
-                            <option value="bow">🙇 Поклон</option>
-                            <option value="shake">🌿 Качание</option>
-                            <option value="glow">🌟 Свечение</option>
-                            <option value="float">☁️ Парение</option>
-                            <option value="hide">👻 Скрыть</option>
-                        </select>
-                    </div>
-                </div><div style="padding: 8px; border: 1px solid rgba(212, 168, 83, 0.2); border-radius: 8px; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
-                        <span>4. Средний план (tavern.png)</span>
-                        <label><input type="checkbox" data-act-flip="mid-center"> Разворот 180°</label>
-                    </div>
-                    <div class="grid-3col">
-                        <input type="number" class="field-input" data-act-dx="mid-center" value="0" step="10" title="Сдвиг X (px)">
-                        <input type="number" class="field-input" data-act-dy="mid-center" value="0" step="5" title="Сдвиг Y (px)">
-                        <select class="field-select" data-act-anim="mid-center">
-                            <option value="none">Спокойно</option>
-                            <option value="walk">🚶 Идёт</option>
-                            <option value="talk">💬 Говорит</option>
-                            <option value="jump">✨ Прыжок</option>
-                            <option value="bow">🙇 Поклон</option>
-                            <option value="shake">🌿 Качание</option>
-                            <option value="glow" selected="">🌟 Свечение</option>
-                            <option value="float">☁️ Парение</option>
-                            <option value="hide">👻 Скрыть</option>
-                        </select>
-                    </div>
-                </div><div style="padding: 8px; border: 1px solid rgba(212, 168, 83, 0.2); border-radius: 8px; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
-                        <span>5. Герой (hero.png)</span>
-                        <label><input type="checkbox" data-act-flip="front-left"> Разворот 180°</label>
-                    </div>
-                    <div class="grid-3col">
-                        <input type="number" class="field-input" data-act-dx="front-left" value="0" step="10" title="Сдвиг X (px)">
-                        <input type="number" class="field-input" data-act-dy="front-left" value="0" step="5" title="Сдвиг Y (px)">
-                        <select class="field-select" data-act-anim="front-left">
-                            <option value="none">Спокойно</option>
-                            <option value="walk">🚶 Идёт</option>
-                            <option value="talk">💬 Говорит</option>
-                            <option value="jump" selected="">✨ Прыжок</option>
-                            <option value="bow">🙇 Поклон</option>
-                            <option value="shake">🌿 Качание</option>
-                            <option value="glow">🌟 Свечение</option>
-                            <option value="float">☁️ Парение</option>
-                            <option value="hide">👻 Скрыть</option>
-                        </select>
-                    </div>
-                </div><div style="padding: 8px; border: 1px solid rgba(212, 168, 83, 0.2); border-radius: 8px; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
-                        <span>6. Деталь (mushrooms.png)</span>
-                        <label><input type="checkbox" data-act-flip="front-right"> Разворот 180°</label>
-                    </div>
-                    <div class="grid-3col">
-                        <input type="number" class="field-input" data-act-dx="front-right" value="0" step="10" title="Сдвиг X (px)">
-                        <input type="number" class="field-input" data-act-dy="front-right" value="0" step="5" title="Сдвиг Y (px)">
-                        <select class="field-select" data-act-anim="front-right">
-                            <option value="none">Спокойно</option>
-                            <option value="walk">🚶 Идёт</option>
-                            <option value="talk">💬 Говорит</option>
-                            <option value="jump">✨ Прыжок</option>
-                            <option value="bow">🙇 Поклон</option>
-                            <option value="shake">🌿 Качание</option>
-                            <option value="glow" selected="">🌟 Свечение</option>
-                            <option value="float">☁️ Парение</option>
-                            <option value="hide">👻 Скрыть</option>
-                        </select>
-                    </div>
-                </div></div>
-                </div>
-            </div>
-
-            <!-- TAB 3: GLOBAL STYLING & SCALE UP TO 150% -->
-            <div class="drawer-section" id="tab-global">
-                <div class="field-card">
-                    <div class="field-card-title">✨ Масштаб и подставка</div>
-                    <div class="field-row">
-                        <label>
-                            <span>Масштаб Сказки (до 150%)</span>
-                            <strong id="bZoomVal">125%</strong>
-                        </label>
-                        <input type="range" id="bZoomSlider" min="70" max="150" step="5" value="100">
-                    </div>
-                    <div class="field-row">
-                        <label>
-                            <span>Масштаб фигур (Pop-up Boost)</span>
-                            <strong id="bPopBoostVal">100%</strong>
-                        </label>
-                        <input type="range" id="bPopBoostSlider" min="75" max="140" step="5" value="100">
-                    </div>
-                    <div class="field-row">
-                        <label>Тема магического пьедестала</label>
-                        <select class="field-select" id="bPedestalSelect">
-                            <option value="ice">❄️ Кристалл вечного льда</option>
-                            <option value="gold-runes">✨ Золотой рунический алтарь</option>
-                            <option value="emerald-druid">🌿 Изумрудный камень друидов</option>
-                            <option value="amethyst-star">🔮 Аметистовый звёздный кристалл</option>
-                            <option value="obsidian-ember">🔥 Обсидиан и угли очага</option>
-                            <option value="none">🚫 Без подставки</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="field-card">
-                    <div class="field-card-title">🎨 Текстуры книги и окружения</div>
-                    <div class="field-row">
-                        <label>Фон комнаты (--room-tex)</label>
-                        <input type="text" class="field-input" id="bRoomTex" value="room.png">
-                    </div>
-                    <div class="field-row">
-                        <label>Обложка книги (--cover-tex)</label>
-                        <input type="text" class="field-input" id="bCoverTex" value="cover.png">
-                    </div>
-                    <div class="field-row">
-                        <label>Бумага страниц (--paper-tex)</label>
-                        <input type="text" class="field-input" id="bPaperTex" value="paper.png">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="drawer-footer">
-            <button class="export-html-btn" id="exportHtmlBtn" type="button">💾 Скачать готовый index.html</button>
-        </div>
-    </aside>
+    
 
     <script>
-        /* ==========================================================================
+         /* ==========================================================================
            1. 8 LAYOUT PRESETS (Balanced Proportions: Tall Trees, Low Mushrooms,
               Standard Boy, Wide Panoramic Mountains)
            ========================================================================== */
@@ -1906,7 +1596,7 @@
            ========================================================================== */
         /*__STORY_DATA_START__*/
         const DEFAULT_STORY = {
-    "userZoom": 1.25,
+    "userZoom": 1.15,
     "popScaleBoost": 1,
     "pedestal": "ice",
     "roomTex": "room.png",
@@ -2221,7 +1911,7 @@
         let currentStepIdx = 0;
 
         /* ==========================================================================
-           3. DOM ELEMENTS & RESPONSIVE SCALING (95% Screen Width Open Book)
+           3. DOM ELEMENTS & RESPONSIVE SCALING (Balanced Fit Without Overscaling)
            ========================================================================== */
         const book3D            = document.getElementById('book3D');
         const popupSpreadStage  = document.getElementById('popupSpreadStage');
@@ -2244,12 +1934,13 @@
             const targetWidthRatio = isPortraitMobile ? 0.96 : 0.95;
             const scaleByWidth = (vw * targetWidthRatio) / spreadBaseW;
 
-            const hudReserve = isLandscapeMobile ? 76 : (isPortraitMobile ? 128 : 138);
-            const neededH = isLandscapeMobile ? 480 : 510;
-            const scaleByHeight = Math.max(220, vh - hudReserve) / neededH;
+            const hudReserve = isLandscapeMobile ? 88 : (isPortraitMobile ? 140 : 155);
+            const neededH = isLandscapeMobile ? 490 : 520;
+            const scaleByHeight = Math.max(200, vh - hudReserve) / neededH;
 
-            let rigScale = Math.min(scaleByWidth, scaleByHeight * 1.25);
-            rigScale = Math.max(0.36, Math.min(rigScale, 1.85));
+            /* Строгий минимум из ширины и высоты (без * 1.25), чтобы книга не раздувалась */
+            let rigScale = Math.min(scaleByWidth, scaleByHeight);
+            rigScale = Math.max(0.36, Math.min(rigScale, 1.38));
 
             document.documentElement.style.setProperty('--rig-scale', rigScale.toFixed(4));
             document.documentElement.style.setProperty('--user-zoom', (STORY.userZoom || 1).toFixed(3));
@@ -2585,330 +2276,374 @@
         const builderToggleBtn = document.getElementById('builderToggleBtn');
         const drawerCloseBtn   = document.getElementById('drawerCloseBtn');
 
-        builderToggleBtn.addEventListener('click', () => {
-            builderDrawer.classList.toggle('is-open');
-            syncDrawerUI();
-        });
-        drawerCloseBtn.addEventListener('click', () => builderDrawer.classList.remove('is-open'));
+        let syncDrawerUI = function () {};
 
-        document.querySelectorAll('.drawer-tab-btn').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.drawer-tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.drawer-section').forEach(s => s.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById(btn.dataset.tab).classList.add('active');
+        if (builderDrawer && builderToggleBtn) {
+            builderToggleBtn.addEventListener('click', () => {
+                builderDrawer.classList.toggle('is-open');
+                syncDrawerUI();
             });
-        });
+            if (drawerCloseBtn) {
+                drawerCloseBtn.addEventListener('click', () => builderDrawer.classList.remove('is-open'));
+            }
 
-        const bSpreadSelect   = document.getElementById('bSpreadSelect');
-        const bAddSpreadBtn   = document.getElementById('bAddSpreadBtn');
-        const bDelSpreadBtn   = document.getElementById('bDelSpreadBtn');
-        const bSpreadTitle    = document.getElementById('bSpreadTitle');
-        const bSpreadLayout   = document.getElementById('bSpreadLayout');
-        const bSpreadMask     = document.getElementById('bSpreadMask');
-        const bSpreadWeather  = document.getElementById('bSpreadWeather');
-        const bSlotsEditorList= document.getElementById('bSlotsEditorList');
-
-        const bStepSelect     = document.getElementById('bStepSelect');
-        const bAddStepBtn     = document.getElementById('bAddStepBtn');
-        const bDelStepBtn     = document.getElementById('bDelStepBtn');
-        const bStepText       = document.getElementById('bStepText');
-        const bSwapA          = document.getElementById('bSwapA');
-        const bSwapB          = document.getElementById('bSwapB');
-        const bSwapBtn        = document.getElementById('bSwapBtn');
-        const bStepActorsList = document.getElementById('bStepActorsList');
-
-        const bZoomSlider     = document.getElementById('bZoomSlider');
-        const bZoomVal        = document.getElementById('bZoomVal');
-        const bPopBoostSlider = document.getElementById('bPopBoostSlider');
-        const bPopBoostVal    = document.getElementById('bPopBoostVal');
-        const bPedestalSelect = document.getElementById('bPedestalSelect');
-        const bRoomTex        = document.getElementById('bRoomTex');
-        const bCoverTex       = document.getElementById('bCoverTex');
-        const bPaperTex       = document.getElementById('bPaperTex');
-
-        /* Populate Swap dropdowns */
-        Object.keys(SLOT_NAMES).forEach((k) => {
-            if (k === 'bg') return;
-            bSwapA.add(new Option(SLOT_NAMES[k], k));
-            bSwapB.add(new Option(SLOT_NAMES[k], k));
-        });
-        bSwapA.value = 'front-left';
-        bSwapB.value = 'front-right';
-
-        function syncDrawerUI() {
-            const zoomPct = Math.round((STORY.userZoom || 1) * 100);
-            bZoomSlider.value = zoomPct;
-            bZoomVal.textContent = `${zoomPct}%`;
-
-            const boostPct = Math.round((STORY.popScaleBoost || 1) * 100);
-            bPopBoostSlider.value = boostPct;
-            bPopBoostVal.textContent = `${boostPct}%`;
-
-            bPedestalSelect.value = STORY.pedestal || 'ice';
-            bRoomTex.value  = STORY.roomTex || 'room.png';
-            bCoverTex.value = STORY.coverTex || 'cover.png';
-            bPaperTex.value = STORY.paperTex || 'paper.png';
-
-            bSpreadSelect.innerHTML = '';
-            STORY.spreads.forEach((sp, idx) => {
-                bSpreadSelect.add(new Option(`${idx + 1}. ${sp.title || 'Глава'}`, idx));
-            });
-            bSpreadSelect.value = currentSpreadIdx;
-
-            const spread = STORY.spreads[currentSpreadIdx];
-            if (!spread) return;
-
-            bSpreadTitle.value   = spread.title || '';
-            bSpreadLayout.value  = spread.layout || 'layout-1';
-            bSpreadMask.value    = spread.bgMask || 'panoramic';
-            bSpreadWeather.value = spread.weather || 'snow';
-
-            /* Slots Editor */
-            bSlotsEditorList.innerHTML = '';
-            const presetMap = LAYOUT_PRESETS[spread.layout] || LAYOUT_PRESETS['layout-1'];
-            Object.keys(SLOT_NAMES).forEach((key) => {
-                const cfg = spread.slots[key] || { enabled: true, src: '', scale: presetMap[key].scale };
-                const row = document.createElement('div');
-                row.style.cssText = 'padding:8px;border:1px solid rgba(212,168,83,0.2);border-radius:8px;display:flex;flex-direction:column;gap:6px;';
-                row.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
-                        <span>${SLOT_NAMES[key]}</span>
-                        <label><input type="checkbox" data-slot-en="${key}" ${cfg.enabled ? 'checked' : ''}> Вкл</label>
-                    </div>
-                    <div class="grid-2col">
-                        <input type="text" class="field-input" data-slot-src="${key}" value="${cfg.src || ''}" placeholder="Файл .png">
-                        <input type="number" class="field-input" data-slot-sc="${key}" step="0.05" min="0.4" max="1.8" value="${cfg.scale !== undefined ? cfg.scale : presetMap[key].scale}">
-                    </div>
-                `;
-                bSlotsEditorList.appendChild(row);
+            document.querySelectorAll('.drawer-tab-btn').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.drawer-tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.drawer-section').forEach(s => s.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(btn.dataset.tab).classList.add('active');
+                });
             });
 
-            bSlotsEditorList.querySelectorAll('input').forEach((inp) => {
-                inp.addEventListener('input', () => {
-                    const k = inp.dataset.slotEn || inp.dataset.slotSrc || inp.dataset.slotSc;
-                    if (!spread.slots[k]) spread.slots[k] = { enabled: true, src: '', scale: 1 };
-                    if (inp.dataset.slotEn)  spread.slots[k].enabled = inp.checked;
-                    if (inp.dataset.slotSrc) spread.slots[k].src     = inp.value.trim();
-                    if (inp.dataset.slotSc)  spread.slots[k].scale   = parseFloat(inp.value) || 1;
+            const bSpreadSelect    = document.getElementById('bSpreadSelect');
+            const bAddSpreadBtn    = document.getElementById('bAddSpreadBtn');
+            const bDelSpreadBtn    = document.getElementById('bDelSpreadBtn');
+            const bSpreadTitle     = document.getElementById('bSpreadTitle');
+            const bSpreadLayout    = document.getElementById('bSpreadLayout');
+            const bSpreadMask      = document.getElementById('bSpreadMask');
+            const bSpreadWeather   = document.getElementById('bSpreadWeather');
+            const bSlotsEditorList = document.getElementById('bSlotsEditorList');
+
+            const bStepSelect      = document.getElementById('bStepSelect');
+            const bAddStepBtn      = document.getElementById('bAddStepBtn');
+            const bDelStepBtn      = document.getElementById('bDelStepBtn');
+            const bStepText        = document.getElementById('bStepText');
+            const bSwapA           = document.getElementById('bSwapA');
+            const bSwapB           = document.getElementById('bSwapB');
+            const bSwapBtn         = document.getElementById('bSwapBtn');
+            const bStepActorsList  = document.getElementById('bStepActorsList');
+
+            const bZoomSlider      = document.getElementById('bZoomSlider');
+            const bZoomVal         = document.getElementById('bZoomVal');
+            const bPopBoostSlider  = document.getElementById('bPopBoostSlider');
+            const bPopBoostVal     = document.getElementById('bPopBoostVal');
+            const bPedestalSelect  = document.getElementById('bPedestalSelect');
+            const bRoomTex         = document.getElementById('bRoomTex');
+            const bCoverTex        = document.getElementById('bCoverTex');
+            const bPaperTex        = document.getElementById('bPaperTex');
+            const exportHtmlBtn    = document.getElementById('exportHtmlBtn');
+
+            /* Populate Swap dropdowns */
+            Object.keys(SLOT_NAMES).forEach((k) => {
+                if (k === 'bg') return;
+                bSwapA.add(new Option(SLOT_NAMES[k], k));
+                bSwapB.add(new Option(SLOT_NAMES[k], k));
+            });
+            bSwapA.value = 'front-left';
+            bSwapB.value = 'front-right';
+
+            syncDrawerUI = function () {
+                const zoomPct = Math.round((STORY.userZoom || 1) * 100);
+                bZoomSlider.value = zoomPct;
+                bZoomVal.textContent = `${zoomPct}%`;
+
+                const boostPct = Math.round((STORY.popScaleBoost || 1) * 100);
+                bPopBoostSlider.value = boostPct;
+                bPopBoostVal.textContent = `${boostPct}%`;
+
+                bPedestalSelect.value = STORY.pedestal || 'ice';
+                bRoomTex.value  = STORY.roomTex || 'room.png';
+                bCoverTex.value = STORY.coverTex || 'cover.png';
+                bPaperTex.value = STORY.paperTex || 'paper.png';
+
+                bSpreadSelect.innerHTML = '';
+                STORY.spreads.forEach((sp, idx) => {
+                    bSpreadSelect.add(new Option(`${idx + 1}. ${sp.title || 'Глава'}`, idx));
+                });
+                bSpreadSelect.value = currentSpreadIdx;
+
+                const spread = STORY.spreads[currentSpreadIdx];
+                if (!spread) return;
+
+                bSpreadTitle.value   = spread.title || '';
+                bSpreadLayout.value  = spread.layout || 'layout-1';
+                bSpreadMask.value    = spread.bgMask || 'panoramic';
+                bSpreadWeather.value = spread.weather || 'snow';
+
+                /* Slots Editor */
+                bSlotsEditorList.innerHTML = '';
+                const presetMap = LAYOUT_PRESETS[spread.layout] || LAYOUT_PRESETS['layout-1'];
+                Object.keys(SLOT_NAMES).forEach((key) => {
+                    const cfg = spread.slots[key] || { enabled: true, src: '', scale: presetMap[key].scale };
+                    const row = document.createElement('div');
+                    row.style.cssText = 'padding:8px;border:1px solid rgba(212,168,83,0.2);border-radius:8px;display:flex;flex-direction:column;gap:6px;';
+                    row.innerHTML = `
+                        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
+                            <span>${SLOT_NAMES[key]}</span>
+                            <label><input type="checkbox" data-slot-en="${key}" ${cfg.enabled ? 'checked' : ''}> Вкл</label>
+                        </div>
+                        <div class="grid-2col">
+                            <input type="text" class="field-input" data-slot-src="${key}" value="${cfg.src || ''}" placeholder="Файл .png">
+                            <input type="number" class="field-input" data-slot-sc="${key}" step="0.05" min="0.4" max="1.8" value="${cfg.scale !== undefined ? cfg.scale : presetMap[key].scale}">
+                        </div>
+                    `;
+                    bSlotsEditorList.appendChild(row);
+                });
+
+                bSlotsEditorList.querySelectorAll('input').forEach((inp) => {
+                    inp.addEventListener('input', () => {
+                        const k = inp.dataset.slotEn || inp.dataset.slotSrc || inp.dataset.slotSc;
+                        if (!spread.slots[k]) spread.slots[k] = { enabled: true, src: '', scale: 1 };
+                        if (inp.dataset.slotEn)  spread.slots[k].enabled = inp.checked;
+                        if (inp.dataset.slotSrc) spread.slots[k].src     = inp.value.trim();
+                        if (inp.dataset.slotSc)  spread.slots[k].scale   = parseFloat(inp.value) || 1;
+                        buildSpreadDOM(currentSpreadIdx);
+                        if (isBookOpen) popupSpreadStage.classList.add('popups-active');
+                    });
+                });
+
+                /* Steps & Actors Choreography Editor */
+                if (!spread.steps || !spread.steps.length) spread.steps = [{ text: '', actors: {} }];
+                if (currentStepIdx >= spread.steps.length) currentStepIdx = spread.steps.length - 1;
+
+                bStepSelect.innerHTML = '';
+                spread.steps.forEach((st, i) => {
+                    bStepSelect.add(new Option(`Шаг ${i + 1}: ${(st.text || '').slice(0, 26)}...`, i));
+                });
+                bStepSelect.value = currentStepIdx;
+
+                const stepObj = spread.steps[currentStepIdx];
+                bStepText.value = stepObj.text || '';
+
+                bStepActorsList.innerHTML = '';
+                if (!stepObj.actors) stepObj.actors = {};
+
+                Object.keys(SLOT_NAMES).forEach((key) => {
+                    if (key === 'bg') return;
+                    const act = stepObj.actors[key] || { dx: 0, dy: 0, flip: false, anim: 'none' };
+                    const card = document.createElement('div');
+                    card.style.cssText = 'padding:8px;border:1px solid rgba(212,168,83,0.2);border-radius:8px;display:flex;flex-direction:column;gap:6px;';
+                    card.innerHTML = `
+                        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
+                            <span>${SLOT_NAMES[key]}</span>
+                            <label><input type="checkbox" data-act-flip="${key}" ${act.flip ? 'checked' : ''}> Разворот 180°</label>
+                        </div>
+                        <div class="grid-3col">
+                            <input type="number" class="field-input" data-act-dx="${key}" value="${act.dx || 0}" step="10" title="Сдвиг X (px)">
+                            <input type="number" class="field-input" data-act-dy="${key}" value="${act.dy || 0}" step="5" title="Сдвиг Y (px)">
+                            <select class="field-select" data-act-anim="${key}">
+                                <option value="none"  ${act.anim === 'none'  ? 'selected' : ''}>Спокойно</option>
+                                <option value="walk"  ${act.anim === 'walk'  ? 'selected' : ''}>🚶 Идёт</option>
+                                <option value="talk"  ${act.anim === 'talk'  ? 'selected' : ''}>💬 Говорит</option>
+                                <option value="jump"  ${act.anim === 'jump'  ? 'selected' : ''}>✨ Прыжок</option>
+                                <option value="bow"   ${act.anim === 'bow'   ? 'selected' : ''}>🙇 Поклон</option>
+                                <option value="shake" ${act.anim === 'shake' ? 'selected' : ''}>🌿 Качание</option>
+                                <option value="glow"  ${act.anim === 'glow'  ? 'selected' : ''}>🌟 Свечение</option>
+                                <option value="float" ${act.anim === 'float' ? 'selected' : ''}>☁️ Парение</option>
+                                <option value="hide"  ${act.anim === 'hide'  ? 'selected' : ''}>👻 Скрыть</option>
+                            </select>
+                        </div>
+                    `;
+                    bStepActorsList.appendChild(card);
+                });
+
+                bStepActorsList.querySelectorAll('input, select').forEach((el) => {
+                    el.addEventListener('input', () => {
+                        const k = el.dataset.actDx || el.dataset.actDy || el.dataset.actFlip || el.dataset.actAnim;
+                        if (!stepObj.actors[k]) stepObj.actors[k] = { dx: 0, dy: 0, flip: false, anim: 'none' };
+                        if (el.dataset.actDx)   stepObj.actors[k].dx   = Number(el.value || 0);
+                        if (el.dataset.actDy)   stepObj.actors[k].dy   = Number(el.value || 0);
+                        if (el.dataset.actFlip) stepObj.actors[k].flip = el.checked;
+                        if (el.dataset.actAnim) stepObj.actors[k].anim = el.value;
+                        applyStepState(currentSpreadIdx, currentStepIdx, false);
+                    });
+                });
+            };
+
+            bSpreadSelect.addEventListener('change', () => {
+                const target = Number(bSpreadSelect.value);
+                if (isBookOpen) {
+                    turnToSpread(target, 0);
+                } else {
+                    currentSpreadIdx = target;
+                    currentStepIdx = 0;
                     buildSpreadDOM(currentSpreadIdx);
-                    if (isBookOpen) popupSpreadStage.classList.add('popups-active');
-                });
+                    syncDrawerUI();
+                }
             });
 
-            /* Steps & Actors Choreography Editor */
-            if (!spread.steps || !spread.steps.length) spread.steps = [{ text: '', actors: {} }];
-            if (currentStepIdx >= spread.steps.length) currentStepIdx = spread.steps.length - 1;
-
-            bStepSelect.innerHTML = '';
-            spread.steps.forEach((st, i) => {
-                bStepSelect.add(new Option(`Шаг ${i + 1}: ${(st.text || '').slice(0, 26)}...`, i));
-            });
-            bStepSelect.value = currentStepIdx;
-
-            const stepObj = spread.steps[currentStepIdx];
-            bStepText.value = stepObj.text || '';
-
-            bStepActorsList.innerHTML = '';
-            if (!stepObj.actors) stepObj.actors = {};
-
-            Object.keys(SLOT_NAMES).forEach((key) => {
-                if (key === 'bg') return;
-                const act = stepObj.actors[key] || { dx: 0, dy: 0, flip: false, anim: 'none' };
-                const card = document.createElement('div');
-                card.style.cssText = 'padding:8px;border:1px solid rgba(212,168,83,0.2);border-radius:8px;display:flex;flex-direction:column;gap:6px;';
-                card.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gold-bright);">
-                        <span>${SLOT_NAMES[key]}</span>
-                        <label><input type="checkbox" data-act-flip="${key}" ${act.flip ? 'checked' : ''}> Разворот 180°</label>
-                    </div>
-                    <div class="grid-3col">
-                        <input type="number" class="field-input" data-act-dx="${key}" value="${act.dx || 0}" step="10" title="Сдвиг X (px)">
-                        <input type="number" class="field-input" data-act-dy="${key}" value="${act.dy || 0}" step="5" title="Сдвиг Y (px)">
-                        <select class="field-select" data-act-anim="${key}">
-                            <option value="none"  ${act.anim === 'none'  ? 'selected' : ''}>Спокойно</option>
-                            <option value="walk"  ${act.anim === 'walk'  ? 'selected' : ''}>🚶 Идёт</option>
-                            <option value="talk"  ${act.anim === 'talk'  ? 'selected' : ''}>💬 Говорит</option>
-                            <option value="jump"  ${act.anim === 'jump'  ? 'selected' : ''}>✨ Прыжок</option>
-                            <option value="bow"   ${act.anim === 'bow'   ? 'selected' : ''}>🙇 Поклон</option>
-                            <option value="shake" ${act.anim === 'shake' ? 'selected' : ''}>🌿 Качание</option>
-                            <option value="glow"  ${act.anim === 'glow'  ? 'selected' : ''}>🌟 Свечение</option>
-                            <option value="float" ${act.anim === 'float' ? 'selected' : ''}>☁️ Парение</option>
-                            <option value="hide"  ${act.anim === 'hide'  ? 'selected' : ''}>👻 Скрыть</option>
-                        </select>
-                    </div>
-                `;
-                bStepActorsList.appendChild(card);
+            bAddSpreadBtn.addEventListener('click', () => {
+                const copy = JSON.parse(JSON.stringify(STORY.spreads[currentSpreadIdx]));
+                copy.title = `Глава ${STORY.spreads.length + 1}. Новая сцена`;
+                STORY.spreads.push(copy);
+                if (isBookOpen) turnToSpread(STORY.spreads.length - 1, 0);
+                else { currentSpreadIdx = STORY.spreads.length - 1; syncDrawerUI(); }
             });
 
-            bStepActorsList.querySelectorAll('input, select').forEach((el) => {
-                el.addEventListener('input', () => {
-                    const k = el.dataset.actDx || el.dataset.actDy || el.dataset.actFlip || el.dataset.actAnim;
-                    if (!stepObj.actors[k]) stepObj.actors[k] = { dx: 0, dy: 0, flip: false, anim: 'none' };
-                    if (el.dataset.actDx)   stepObj.actors[k].dx   = Number(el.value || 0);
-                    if (el.dataset.actDy)   stepObj.actors[k].dy   = Number(el.value || 0);
-                    if (el.dataset.actFlip) stepObj.actors[k].flip = el.checked;
-                    if (el.dataset.actAnim) stepObj.actors[k].anim = el.value;
-                    applyStepState(currentSpreadIdx, currentStepIdx, false);
-                });
-            });
-        }
-
-        bSpreadSelect.addEventListener('change', () => {
-            const target = Number(bSpreadSelect.value);
-            if (isBookOpen) {
-                turnToSpread(target, 0);
-            } else {
-                currentSpreadIdx = target;
+            bDelSpreadBtn.addEventListener('click', () => {
+                if (STORY.spreads.length <= 1) return;
+                STORY.spreads.splice(currentSpreadIdx, 1);
+                currentSpreadIdx = Math.max(0, currentSpreadIdx - 1);
                 currentStepIdx = 0;
                 buildSpreadDOM(currentSpreadIdx);
+                if (isBookOpen) popupSpreadStage.classList.add('popups-active');
                 syncDrawerUI();
-            }
-        });
+            });
 
-        bAddSpreadBtn.addEventListener('click', () => {
-            const copy = JSON.parse(JSON.stringify(STORY.spreads[currentSpreadIdx]));
-            copy.title = `Глава ${STORY.spreads.length + 1}. Новая сцена`;
-            STORY.spreads.push(copy);
-            if (isBookOpen) turnToSpread(STORY.spreads.length - 1, 0);
-            else { currentSpreadIdx = STORY.spreads.length - 1; syncDrawerUI(); }
-        });
+            bSpreadTitle.addEventListener('input', () => {
+                STORY.spreads[currentSpreadIdx].title = bSpreadTitle.value;
+                applyStepState(currentSpreadIdx, currentStepIdx, false);
+            });
 
-        bDelSpreadBtn.addEventListener('click', () => {
-            if (STORY.spreads.length <= 1) return;
-            STORY.spreads.splice(currentSpreadIdx, 1);
-            currentSpreadIdx = Math.max(0, currentSpreadIdx - 1);
-            currentStepIdx = 0;
-            buildSpreadDOM(currentSpreadIdx);
-            if (isBookOpen) popupSpreadStage.classList.add('popups-active');
-            syncDrawerUI();
-        });
+            bSpreadLayout.addEventListener('change', () => {
+                STORY.spreads[currentSpreadIdx].layout = bSpreadLayout.value;
+                buildSpreadDOM(currentSpreadIdx);
+                if (isBookOpen) popupSpreadStage.classList.add('popups-active');
+                syncDrawerUI();
+            });
 
-        bSpreadTitle.addEventListener('input', () => {
-            STORY.spreads[currentSpreadIdx].title = bSpreadTitle.value;
-            applyStepState(currentSpreadIdx, currentStepIdx, false);
-        });
+            bSpreadMask.addEventListener('change', () => {
+                STORY.spreads[currentSpreadIdx].bgMask = bSpreadMask.value;
+                buildSpreadDOM(currentSpreadIdx);
+                if (isBookOpen) popupSpreadStage.classList.add('popups-active');
+            });
 
-        bSpreadLayout.addEventListener('change', () => {
-            STORY.spreads[currentSpreadIdx].layout = bSpreadLayout.value;
-            buildSpreadDOM(currentSpreadIdx);
-            if (isBookOpen) popupSpreadStage.classList.add('popups-active');
-            syncDrawerUI();
-        });
+            bSpreadWeather.addEventListener('change', () => {
+                STORY.spreads[currentSpreadIdx].weather = bSpreadWeather.value;
+            });
 
-        bSpreadMask.addEventListener('change', () => {
-            STORY.spreads[currentSpreadIdx].bgMask = bSpreadMask.value;
-            buildSpreadDOM(currentSpreadIdx);
-            if (isBookOpen) popupSpreadStage.classList.add('popups-active');
-        });
+            bStepSelect.addEventListener('change', () => {
+                currentStepIdx = Number(bStepSelect.value) || 0;
+                applyStepState(currentSpreadIdx, currentStepIdx, true);
+                syncDrawerUI();
+            });
 
-        bSpreadWeather.addEventListener('change', () => {
-            STORY.spreads[currentSpreadIdx].weather = bSpreadWeather.value;
-        });
+            bAddStepBtn.addEventListener('click', () => {
+                const spread = STORY.spreads[currentSpreadIdx];
+                const prev = spread.steps[currentStepIdx] || { text: '', actors: {} };
+                const clone = JSON.parse(JSON.stringify(prev));
+                clone.text = 'Новый шаг действия на этой странице...';
+                spread.steps.push(clone);
+                currentStepIdx = spread.steps.length - 1;
+                applyStepState(currentSpreadIdx, currentStepIdx, true);
+                syncDrawerUI();
+            });
 
-        bStepSelect.addEventListener('change', () => {
-            currentStepIdx = Number(bStepSelect.value) || 0;
-            applyStepState(currentSpreadIdx, currentStepIdx, true);
-            syncDrawerUI();
-        });
+            bDelStepBtn.addEventListener('click', () => {
+                const spread = STORY.spreads[currentSpreadIdx];
+                if (spread.steps.length <= 1) return;
+                spread.steps.splice(currentStepIdx, 1);
+                currentStepIdx = Math.max(0, currentStepIdx - 1);
+                applyStepState(currentSpreadIdx, currentStepIdx, true);
+                syncDrawerUI();
+            });
 
-        bAddStepBtn.addEventListener('click', () => {
-            const spread = STORY.spreads[currentSpreadIdx];
-            const prev = spread.steps[currentStepIdx] || { text: '', actors: {} };
-            const clone = JSON.parse(JSON.stringify(prev));
-            clone.text = 'Новый шаг действия на этой странице...';
-            spread.steps.push(clone);
-            currentStepIdx = spread.steps.length - 1;
-            applyStepState(currentSpreadIdx, currentStepIdx, true);
-            syncDrawerUI();
-        });
+            bStepText.addEventListener('input', () => {
+                STORY.spreads[currentSpreadIdx].steps[currentStepIdx].text = bStepText.value;
+                applyStepState(currentSpreadIdx, currentStepIdx, false);
+            });
 
-        bDelStepBtn.addEventListener('click', () => {
-            const spread = STORY.spreads[currentSpreadIdx];
-            if (spread.steps.length <= 1) return;
-            spread.steps.splice(currentStepIdx, 1);
-            currentStepIdx = Math.max(0, currentStepIdx - 1);
-            applyStepState(currentSpreadIdx, currentStepIdx, true);
-            syncDrawerUI();
-        });
+            bSwapBtn.addEventListener('click', () => {
+                const slotA = bSwapA.value;
+                const slotB = bSwapB.value;
+                if (!slotA || !slotB || slotA === slotB) return;
 
-        bStepText.addEventListener('input', () => {
-            STORY.spreads[currentSpreadIdx].steps[currentStepIdx].text = bStepText.value;
-            applyStepState(currentSpreadIdx, currentStepIdx, false);
-        });
+                const spread = STORY.spreads[currentSpreadIdx];
+                const preset = LAYOUT_PRESETS[spread.layout] || LAYOUT_PRESETS['layout-1'];
+                const pA = preset[slotA];
+                const pB = preset[slotB];
+                if (!pA || !pB) return;
 
-        bSwapBtn.addEventListener('click', () => {
-            const slotA = bSwapA.value;
-            const slotB = bSwapB.value;
-            if (!slotA || !slotB || slotA === slotB) return;
+                const stepObj = spread.steps[currentStepIdx];
+                if (!stepObj.actors) stepObj.actors = {};
+                if (!stepObj.actors[slotA]) stepObj.actors[slotA] = { dx: 0, dy: 0, flip: false, anim: 'walk' };
+                if (!stepObj.actors[slotB]) stepObj.actors[slotB] = { dx: 0, dy: 0, flip: false, anim: 'walk' };
 
-            const spread = STORY.spreads[currentSpreadIdx];
-            const preset = LAYOUT_PRESETS[spread.layout] || LAYOUT_PRESETS['layout-1'];
-            const pA = preset[slotA];
-            const pB = preset[slotB];
-            if (!pA || !pB) return;
+                const deltaX = Math.round(((pB.x - pA.x) / 100) * 760);
+                stepObj.actors[slotA].dx = deltaX;
+                stepObj.actors[slotB].dx = -deltaX;
+                stepObj.actors[slotA].flip = deltaX > 0;
+                stepObj.actors[slotB].flip = deltaX < 0;
 
-            const stepObj = spread.steps[currentStepIdx];
-            if (!stepObj.actors) stepObj.actors = {};
-            if (!stepObj.actors[slotA]) stepObj.actors[slotA] = { dx: 0, dy: 0, flip: false, anim: 'walk' };
-            if (!stepObj.actors[slotB]) stepObj.actors[slotB] = { dx: 0, dy: 0, flip: false, anim: 'walk' };
+                applyStepState(currentSpreadIdx, currentStepIdx, false);
+                syncDrawerUI();
+            });
 
-            const deltaX = Math.round(((pB.x - pA.x) / 100) * 760);
-            stepObj.actors[slotA].dx = deltaX;
-            stepObj.actors[slotB].dx = -deltaX;
-            stepObj.actors[slotA].flip = deltaX > 0;
-            stepObj.actors[slotB].flip = deltaX < 0;
+            bZoomSlider.addEventListener('input', () => {
+                const pct = Number(bZoomSlider.value) || 100;
+                STORY.userZoom = pct / 100;
+                bZoomVal.textContent = `${pct}%`;
+                updateResponsiveScale();
+            });
 
-            applyStepState(currentSpreadIdx, currentStepIdx, false);
-            syncDrawerUI();
-        });
+            bPopBoostSlider.addEventListener('input', () => {
+                const pct = Number(bPopBoostSlider.value) || 100;
+                STORY.popScaleBoost = pct / 100;
+                bPopBoostVal.textContent = `${pct}%`;
+                updateResponsiveScale();
+            });
 
-        bZoomSlider.addEventListener('input', () => {
-            const pct = Number(bZoomSlider.value) || 100;
-            STORY.userZoom = pct / 100;
-            bZoomVal.textContent = `${pct}%`;
-            updateResponsiveScale();
-        });
-
-        bPopBoostSlider.addEventListener('input', () => {
-            const pct = Number(bPopBoostSlider.value) || 100;
-            STORY.popScaleBoost = pct / 100;
-            bPopBoostVal.textContent = `${pct}%`;
-            updateResponsiveScale();
-        });
-
-        bPedestalSelect.addEventListener('change', () => {
-            STORY.pedestal = bPedestalSelect.value;
-            applyGlobalTheme();
-        });
-
-        [bRoomTex, bCoverTex, bPaperTex].forEach((inp) => {
-            inp.addEventListener('input', () => {
-                STORY.roomTex  = bRoomTex.value.trim()  || 'room.png';
-                STORY.coverTex = bCoverTex.value.trim() || 'cover.png';
-                STORY.paperTex = bPaperTex.value.trim() || 'paper.png';
+            bPedestalSelect.addEventListener('change', () => {
+                STORY.pedestal = bPedestalSelect.value;
                 applyGlobalTheme();
             });
-        });
 
-        /* Clean Standalone HTML Export */
-        document.getElementById('exportHtmlBtn').addEventListener('click', () => {
-            const htmlSrc = document.documentElement.outerHTML;
-            const dataBlock = `const DEFAULT_STORY = ${JSON.stringify(STORY, null, 4)};`;
-            const finalHtml = '<!DOCTYPE html>\n' + htmlSrc.replace(
-                /\/\*__STORY_DATA_START__\*\/[\s\S]*?\/\*__STORY_DATA_END__\*\//,
-                `/*__STORY_DATA_START__*/\n        ${dataBlock}\n        /*__STORY_DATA_END__*/`
-            );
-            const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'index.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        });
+            [bRoomTex, bCoverTex, bPaperTex].forEach((inp) => {
+                inp.addEventListener('input', () => {
+                    STORY.roomTex  = bRoomTex.value.trim()  || 'room.png';
+                    STORY.coverTex = bCoverTex.value.trim() || 'cover.png';
+                    STORY.paperTex = bPaperTex.value.trim() || 'paper.png';
+                    applyGlobalTheme();
+                });
+            });
+
+            /* Clean Standalone HTML Export (Always Starts Closed & Without Constructor) */
+            if (exportHtmlBtn) {
+                exportHtmlBtn.addEventListener('click', () => {
+                    // 1. Клонируем документ, чтобы не трогать открытую сессию
+                    const cloneDoc = document.documentElement.cloneNode(true);
+
+                    // 2. Полностью удаляем кнопку конструктора и боковую панель конструктора
+                    const clonedToggle = cloneDoc.querySelector('#builderToggleBtn');
+                    if (clonedToggle) clonedToggle.remove();
+                    const clonedDrawer = cloneDoc.querySelector('#builderDrawer');
+                    if (clonedDrawer) clonedDrawer.remove();
+
+                    // 3. Очищаем запечённый style на <html>, чтобы книга сама рассчитала масштаб под экран
+                    cloneDoc.removeAttribute('style');
+
+                    // 4. Сбрасываем состояние книги в самое начало (закрыта на пьедестале)
+                    const clonedBody = cloneDoc.querySelector('body');
+                    if (clonedBody) clonedBody.classList.remove('book-is-open');
+
+                    const clonedBook = cloneDoc.querySelector('#book3D');
+                    if (clonedBook) {
+                        clonedBook.className = 'book state-floating';
+                        clonedBook.setAttribute('data-pedestal', STORY.pedestal || 'ice');
+                    }
+
+                    const clonedStage = cloneDoc.querySelector('#popupSpreadStage');
+                    if (clonedStage) {
+                        clonedStage.className = 'popup-spread-stage';
+                        clonedStage.innerHTML = '';
+                    }
+
+                    const clonedLeaf = cloneDoc.querySelector('#turningPageLeaf');
+                    if (clonedLeaf) {
+                        clonedLeaf.className = 'turning-page-leaf';
+                    }
+
+                    // 5. Подставляем свежий DEFAULT_STORY и скачиваем чистый index.html
+                    const htmlSrc = cloneDoc.outerHTML;
+                    const dataBlock = `const DEFAULT_STORY = ${JSON.stringify(STORY, null, 4)};`;
+                    const finalHtml = '<!DOCTYPE html>\n' + htmlSrc.replace(
+                        /\/\*__STORY_DATA_START__\*\/[\s\S]*?\/\*__STORY_DATA_END__\*\//,
+                        `/*__STORY_DATA_START__*/\n        ${dataBlock}\n        /*__STORY_DATA_END__*/`
+                    );
+
+                    const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'index.html';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                });
+            }
+        }
 
         /* ==========================================================================
            8. INITIAL ENTRANCE
