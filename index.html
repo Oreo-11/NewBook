@@ -1404,6 +1404,35 @@
             overflow: hidden;
             pointer-events: none;
         }
+
+                /* ==========================================================================
+           SAFE MOBILE FPS OPTIMIZATION (NEVER TOUCHES preserve-3d)
+           ========================================================================== */
+        @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+            .room-background {
+                filter: brightness(0.84);
+            }
+            .aura-blur-tex {
+                filter: blur(20px) saturate(1.8);
+                animation: none;
+            }
+            .pedestal-cover-reflection {
+                filter: blur(12px);
+            }
+            .pedestal-rim-svg {
+                animation: none;
+            }
+            .book-drop-shadow {
+                filter: none !important;
+                background: radial-gradient(ellipse at center, rgba(0,0,0,0.86) 25%, rgba(0,0,0,0.4) 58%, transparent 75%) !important;
+            }
+            .standee-page-shadow {
+                filter: none !important;
+            }
+            .standee-img {
+                filter: drop-shadow(0 5px 6px rgba(20, 9, 3, 0.42));
+            }
+        }
     </style>
 </head>
 <body class="">
@@ -1489,14 +1518,14 @@
 
     <section class="story-reader-panel" id="storyReaderPanel">
         <div class="reader-header-bar">
-            <div class="chapter-title-text" id="chapterTitleText">Глава III. Тайна Светящейся Поляны</div>
+            <div class="chapter-title-text" id="chapterTitleText">Глава I. Зов Серебряных Вершин</div>
             <div class="reader-progress-Right">
-                <div class="dialog-dots" id="dialogDots"><span class="dialog-dot active"></span><span class="dialog-dot"></span></div>
-                <span class="page-counter-badge" id="pageCounterBadge">Разворот 3 / 4</span>
+                <div class="dialog-dots" id="dialogDots"><span class="dialog-dot"></span><span class="dialog-dot active"></span></div>
+                <span class="page-counter-badge" id="pageCounterBadge">Разворот 1 / 4</span>
             </div>
         </div>
         <div class="reader-body-viewport">
-            <p class="story-paragraph-text" id="storyParagraphText">В глубине чащи волшебные грибы засветились мягким янтарным огнём, указывая путнику скрытую дорогу среди заснеженных елей.</p>
+            <p class="story-paragraph-text" id="storyParagraphText">Сделав несколько шагов к мерцающим лесным грибам, он обернулся к тёплым окнам таверны — в воздухе кружились первые волшебные снежинки.</p>
         </div>
         <div class="reader-controls-row">
             <button class="reader-nav-btn" id="prevBtn" type="button">← Назад</button>
@@ -1596,7 +1625,7 @@
            ========================================================================== */
         /*__STORY_DATA_START__*/
         const DEFAULT_STORY = {
-    "userZoom": 1.15,
+    "userZoom": 1,
     "popScaleBoost": 1,
     "pedestal": "ice",
     "roomTex": "room.png",
@@ -1606,7 +1635,7 @@
         {
             "title": "Глава I. Зов Серебряных Вершин",
             "layout": "layout-1",
-            "bgMask": "arch",
+            "bgMask": "panoramic",
             "weather": "snow",
             "slots": {
                 "bg": {
@@ -1686,7 +1715,7 @@
         {
             "title": "Глава II. Огни Лесной Таверны",
             "layout": "layout-3",
-            "bgMask": "arch",
+            "bgMask": "panoramic",
             "weather": "snow",
             "slots": {
                 "bg": {
@@ -1840,7 +1869,7 @@
         {
             "title": "Глава IV. Рассвет над Хребтом",
             "layout": "layout-8",
-            "bgMask": "arch",
+            "bgMask": "panoramic",
             "weather": "snow",
             "slots": {
                 "bg": {
