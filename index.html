@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Новогодняя Шкатулка-Театр — Живая 3D-Сказка</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Philosopher:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Philosopher:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <style>
-    :root {
+    :root {  
       --stage-w: 100vw;
       --stage-h: 100dvh;
       --user-zoom: 1;
@@ -82,7 +82,7 @@
       inset: -15%;
       pointer-events: none;
       z-index: 1;
-      transition: background 2.4s var(--ease-velvet), opacity 2.4s ease;
+      transition: opacity 2.4s ease;
     }
 
     body[data-aura="gold"] .room-aura {
@@ -127,7 +127,7 @@
         scale(var(--user-zoom))
         rotateX(var(--cam-rot-x))
         rotateZ(var(--cam-rot-z));
-      transition: transform 1.85s var(--ease-velvet), filter 1.85s ease;
+      transition: transform 1.85s var(--ease-velvet);
       cursor: pointer;
     }
 
@@ -138,6 +138,20 @@
     .shadowbox-stage.is-finished {
       pointer-events: none;
       filter: brightness(0.86) contrast(1.03);
+    }
+
+    /* Пауза бесконечных анимаций сцены, когда она полностью скрыта за переходным экраном */
+    .shadowbox-stage.is-occluded .horizon-aurora,
+    .shadowbox-stage.is-occluded .standee-art {
+      animation-play-state: paused !important;
+    }
+
+    /* Мгновенная смена декораций под прикрытием переходного экрана */
+    .stage-3d-world.is-instant-swap,
+    .stage-3d-world.is-instant-swap *,
+    .stage-3d-world.is-instant-swap *::before,
+    .stage-3d-world.is-instant-swap *::after {
+      transition: none !important;
     }
 
     /* Внешний резной багет шкатулки из красного дерева и латуни */
@@ -181,17 +195,21 @@
         inset 0 28px 42px -10px rgba(4, 8, 18, 0.82);
     }
 
-    /* Эффект Клауса: плавный перелив между морозной полночью и янтарным теплом */
-    .theater-niche::after {
-      content: "";
+    /* Бархатная сумеречная дымка предвкушения перед входом в межглавовый переход */
+    .chapter-prelude-veil {
       position: absolute;
       inset: 0;
+      z-index: 25;
       pointer-events: none;
-      z-index: 26;
-      transition: background 1.95s var(--ease-velvet), opacity 1.95s ease;
+      background:
+        radial-gradient(circle at 50% 44%, rgba(255, 218, 136, 0.14) 0%, rgba(8, 14, 30, 0.74) 64%, rgba(4, 8, 18, 0.94) 100%);
+      opacity: 0;
+      transition: opacity 0.65s var(--ease-velvet);
+      will-change: opacity;
     }
-
-
+    .chapter-prelude-veil.is-active {
+      opacity: 1;
+    }
 
     /* ==================== ТЕАТРАЛЬНЫЙ ПРОСЦЕНИУМ (БАРХАТНЫЙ ЛАМБРЕКЕН И РАМПА) ==================== */
     .proscenium-curtain-valance {
@@ -229,6 +247,7 @@
       pointer-events: none;
       background: radial-gradient(ellipse 75% 100% at 50% 100%, rgba(255, 204, 112, 0.34) 0%, transparent 75%);
       transition: opacity 1.8s ease;
+      will-change: opacity;
     }
 
     .shadowbox-stage[data-mood="frost"] .proscenium-footlights {
@@ -291,6 +310,7 @@
       transform: translate3d(0, 0, 0);
       animation: auroraWave 14s ease-in-out infinite alternate;
       pointer-events: none;
+      will-change: transform, opacity;
     }
 
     @keyframes auroraWave {
@@ -326,6 +346,7 @@
       opacity: 0;
       pointer-events: none;
       z-index: 4;
+      will-change: transform, opacity;
     }
 
     .shooting-star.is-streaking {
@@ -356,12 +377,26 @@
       background-position: center center;
       background-size: cover;
       background-repeat: no-repeat;
-      transition:
-        background-image 1.1s ease,
-        filter 1.95s var(--ease-velvet),
-        transform 1.4s var(--ease-velvet);
+      transition: transform 1.4s var(--ease-velvet);
       z-index: 2;
       pointer-events: none;
+      backface-visibility: hidden;
+    }
+
+    /* GPU-вуаль тёплого света поверх карточки фона (заменяет лагающую анимацию filter) */
+    .scene-backdrop-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 60%, rgba(255, 198, 104, 0.24) 0%, rgba(255, 152, 64, 0.1) 52%, transparent 82%);
+      opacity: 0;
+      transition: opacity 1.85s var(--ease-velvet);
+      will-change: opacity;
+    }
+
+    .shadowbox-stage[data-mood="warmth"] .scene-backdrop-card::after {
+      opacity: 1;
     }
 
     .scene-backdrop-card[data-mask="arch"] {
@@ -378,14 +413,6 @@
     .scene-backdrop-card[data-mask="full"] {
       -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 80%, transparent 100%);
       mask-image: linear-gradient(180deg, #000 0%, #000 80%, transparent 100%);
-    }
-
-    .shadowbox-stage[data-mood="frost"] .scene-backdrop-card {
-      filter: brightness(0.88) saturate(0.95) contrast(1.04);
-    }
-
-    .shadowbox-stage[data-mood="warmth"] .scene-backdrop-card {
-      filter: brightness(1.05) saturate(1.14) sepia(0.08);
     }
 
     /* Главная снежная сцена-помост */
@@ -405,16 +432,22 @@
         inset 0 12px 26px rgba(255, 255, 255, 0.82),
         inset 0 -32px 54px rgba(34, 62, 108, 0.52);
       transform: translateZ(-45px);
-      transition: filter 1.95s var(--ease-velvet), box-shadow 1.95s var(--ease-velvet);
       pointer-events: none;
     }
 
-    .shadowbox-stage[data-mood="warmth"] .stage-floor-deck {
-      filter: sepia(0.14) brightness(1.04);
-      box-shadow:
-        0 -16px 38px rgba(255, 200, 122, 0.34),
-        inset 0 14px 32px rgba(255, 244, 218, 0.85),
-        inset 0 -32px 54px rgba(56, 38, 28, 0.45);
+    .stage-floor-deck::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(ellipse 85% 55% at 50% 24%, rgba(255, 212, 132, 0.34) 0%, rgba(255, 174, 88, 0.14) 55%, transparent 80%);
+      opacity: 0;
+      transition: opacity 1.85s var(--ease-velvet);
+      will-change: opacity;
+    }
+
+    .shadowbox-stage[data-mood="warmth"] .stage-floor-deck::after {
+      opacity: 1;
     }
 
     .moonlight-ground-wash {
@@ -446,7 +479,6 @@
         inset 0 -18px 28px rgba(72, 108, 162, 0.35);
       transform: translateZ(-55px);
       pointer-events: none;
-      transition: filter 1.95s var(--ease-velvet);
     }
 
     .diorama-hill-mid::after {
@@ -460,6 +492,7 @@
       background: radial-gradient(ellipse at 50% 45%, rgba(255, 196, 102, 0.38) 0%, rgba(255, 164, 72, 0.14) 52%, transparent 78%);
       opacity: 0.45;
       transition: opacity 1.95s var(--ease-velvet), transform 1.95s var(--ease-velvet);
+      will-change: opacity, transform;
     }
 
     .shadowbox-stage[data-mood="warmth"] .diorama-hill-mid::after {
@@ -479,12 +512,6 @@
         radial-gradient(ellipse 90% 60% at 50% 55%, rgba(218, 236, 255, 0.46) 0%, rgba(188, 218, 252, 0.22) 55%, transparent 82%);
       transform: translateZ(-22px);
       pointer-events: none;
-      transition: background 1.95s var(--ease-velvet);
-    }
-
-    .shadowbox-stage[data-mood="warmth"] .midground-mist-layer {
-      background:
-        radial-gradient(ellipse 90% 60% at 50% 55%, rgba(255, 224, 172, 0.38) 0%, rgba(218, 236, 255, 0.20) 58%, transparent 84%);
     }
 
     /* Передний снежный вал для главных героев */
@@ -504,11 +531,21 @@
         inset 0 -22px 38px rgba(68, 102, 152, 0.36);
       transform: translateZ(4px);
       pointer-events: none;
-      transition: filter 1.95s var(--ease-velvet);
     }
 
-    .shadowbox-stage[data-mood="warmth"] .diorama-snowbank-front {
-      filter: sepia(0.09) brightness(1.03);
+    .diorama-snowbank-front::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(ellipse 80% 55% at 50% 18%, rgba(255, 224, 156, 0.28) 0%, transparent 72%);
+      opacity: 0;
+      transition: opacity 1.85s var(--ease-velvet);
+      will-change: opacity;
+    }
+
+    .shadowbox-stage[data-mood="warmth"] .diorama-snowbank-front::after {
+      opacity: 1;
     }
 
     /* ==================== СЛЕДЫ НА СНЕГУ (КАРТА МАРОДЁРОВ) ==================== */
@@ -532,6 +569,7 @@
       opacity: 0;
       transform: translate(-50%, -50%) scale(0.5);
       animation: footprintStep 3.4s var(--ease-velvet) forwards;
+      will-change: transform, opacity;
     }
 
     @keyframes footprintStep {
@@ -541,7 +579,7 @@
       100% { opacity: 0; transform: translate(-50%, -50%) scale(0.88); }
     }
 
-    /* ==================== ФИГУРКИ-СТЕНДИ И ПЕРСОНАЖИ ==================== */
+    /* ==================== ФИГУРКИ-СТЕНДИ И ПЕРСОНАЖИ (100% GPU TRANSFORM) ==================== */
     .standees-layer {
       position: absolute;
       inset: 0;
@@ -554,14 +592,11 @@
       position: absolute;
       transform-origin: bottom center;
       transform-style: preserve-3d;
+      /* Перемещения идут через GPU transform (translate3d), не вызывая Reflow left/top */
       transition:
-        left 1.45s var(--ease-velvet),
-        top 1.45s var(--ease-velvet),
-        width 1.25s var(--ease-velvet),
-        height 1.25s var(--ease-velvet),
         opacity 0.95s ease,
         transform 1.35s var(--ease-velvet);
-      will-change: left, top, transform, opacity;
+      will-change: transform, opacity;
       pointer-events: none;
     }
 
@@ -600,6 +635,7 @@
       pointer-events: none;
       opacity: 0;
       transition: opacity 1.8s var(--ease-velvet), transform 1.8s var(--ease-velvet);
+      will-change: opacity, transform;
     }
 
     .standee-light-pool.lantern-glow {
@@ -625,7 +661,8 @@
       height: 100%;
       z-index: 3;
       transform-origin: bottom center;
-      transition: transform 1.25s var(--ease-velvet), filter 1.65s ease;
+      transition: transform 1.25s var(--ease-velvet);
+      will-change: transform;
     }
 
     .standee-art::after {
@@ -641,6 +678,7 @@
       pointer-events: none;
     }
 
+    /* Тень кэшируется видеокартой один раз без покадровой перерисовки filter */
     .standee-img {
       position: relative;
       width: 100%;
@@ -651,14 +689,9 @@
       filter:
         drop-shadow(0 8px 12px rgba(15, 28, 54, 0.48))
         drop-shadow(0 0 2px rgba(255, 255, 255, 0.35));
-      transition: transform 1.1s var(--ease-velvet), filter 1.65s ease;
+      transition: transform 1.1s var(--ease-velvet);
       pointer-events: none;
-    }
-
-    .shadowbox-stage[data-mood="warmth"] .standee-img {
-      filter:
-        drop-shadow(0 8px 14px rgba(28, 18, 10, 0.5))
-        drop-shadow(0 0 12px rgba(255, 206, 120, 0.25));
+      backface-visibility: hidden;
     }
 
     .standee-slot.is-flipped .standee-img {
@@ -748,6 +781,7 @@
         opacity 0.65s var(--ease-velvet),
         transform 0.72s var(--ease-velvet);
       pointer-events: none;
+      will-change: opacity, transform;
     }
 
     .standee-slot[data-slot="front-left"] .standee-speech-bubble { left: 68%; }
@@ -827,6 +861,7 @@
       backface-visibility: hidden;
       transition: transform 2.55s var(--ease-theatrical), box-shadow 2.55s ease;
       overflow: hidden;
+      will-change: transform;
     }
 
     .shutter-door.left-door {
@@ -1130,15 +1165,23 @@
       overflow: hidden;
       opacity: 0;
       pointer-events: none;
+      contain: layout style paint;
       will-change: opacity;
       backface-visibility: hidden;
       transform: translate3d(0, 0, 0);
-      transition: opacity 0.95s var(--ease-soft-in-out);
+      transition: opacity 1.18s var(--ease-soft-in-out);
     }
 
     .chapter-transition-overlay.is-active {
       opacity: 1;
       pointer-events: auto;
+    }
+
+    /* Удерживает финальное состояние всех анимаций снежинки во время плавного растворения */
+    .chapter-transition-overlay.is-fading-out {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1.15s var(--ease-soft-in-out);
     }
 
     .transition-bg-photo {
@@ -1153,7 +1196,8 @@
       transform: translate3d(0, 0, 0) scale(1.01);
     }
 
-    .chapter-transition-overlay.is-active .transition-bg-photo {
+    .chapter-transition-overlay.is-active .transition-bg-photo,
+    .chapter-transition-overlay.is-fading-out .transition-bg-photo {
       animation: transitionPhotoKenBurns 4.9s var(--ease-soft-in-out) forwards;
     }
 
@@ -1173,7 +1217,8 @@
       pointer-events: none;
     }
 
-    .chapter-transition-overlay.is-active .transition-aurora-rays {
+    .chapter-transition-overlay.is-active .transition-aurora-rays,
+    .chapter-transition-overlay.is-fading-out .transition-aurora-rays {
       animation: transitionAuroraPulse 4.8s ease-in-out forwards;
     }
 
@@ -1198,7 +1243,8 @@
       pointer-events: none;
     }
 
-    .chapter-transition-overlay.is-active .transition-snow-swirl {
+    .chapter-transition-overlay.is-active .transition-snow-swirl,
+    .chapter-transition-overlay.is-fading-out .transition-snow-swirl {
       animation: snowLayerGlide 4.8s linear forwards;
     }
 
@@ -1223,6 +1269,7 @@
       z-index: 5;
       pointer-events: none;
       overflow: visible;
+      transform: translateZ(0);
     }
 
     .svg-flight-stem-glow {
@@ -1244,7 +1291,9 @@
     }
 
     .chapter-transition-overlay.is-active .svg-flight-stem-glow,
-    .chapter-transition-overlay.is-active .svg-flight-stem {
+    .chapter-transition-overlay.is-active .svg-flight-stem,
+    .chapter-transition-overlay.is-fading-out .svg-flight-stem-glow,
+    .chapter-transition-overlay.is-fading-out .svg-flight-stem {
       animation: flightStemRise 3.9s var(--ease-soft-in-out) 0.35s forwards;
     }
 
@@ -1258,9 +1307,11 @@
 
     .svg-snowflake-bloom {
       transform-origin: 180px 290px;
+      will-change: transform, opacity;
     }
 
-    .chapter-transition-overlay.is-active .svg-snowflake-bloom {
+    .chapter-transition-overlay.is-active .svg-snowflake-bloom,
+    .chapter-transition-overlay.is-fading-out .svg-snowflake-bloom {
       animation: snowflakeGentleSpin 3.2s var(--ease-velvet) 1.55s forwards;
     }
 
@@ -1290,7 +1341,9 @@
     }
 
     .chapter-transition-overlay.is-active .sf-main-ray-glow,
-    .chapter-transition-overlay.is-active .sf-main-ray {
+    .chapter-transition-overlay.is-active .sf-main-ray,
+    .chapter-transition-overlay.is-fading-out .sf-main-ray-glow,
+    .chapter-transition-overlay.is-fading-out .sf-main-ray {
       animation: drawSnowflakeRay 1.55s var(--ease-velvet) 1.58s forwards;
     }
 
@@ -1309,7 +1362,8 @@
       stroke-dashoffset: 140;
     }
 
-    .chapter-transition-overlay.is-active .sf-branch-detail {
+    .chapter-transition-overlay.is-active .sf-branch-detail,
+    .chapter-transition-overlay.is-fading-out .sf-branch-detail {
       animation: drawSnowflakeBranch 1.45s var(--ease-velvet) 2.05s forwards;
     }
 
@@ -1326,7 +1380,8 @@
       stroke-dashoffset: 220;
     }
 
-    .chapter-transition-overlay.is-active .sf-center-gem {
+    .chapter-transition-overlay.is-active .sf-center-gem,
+    .chapter-transition-overlay.is-fading-out .sf-center-gem {
       animation: drawCenterGem 1.35s var(--ease-velvet) 1.85s forwards;
     }
 
@@ -1342,7 +1397,8 @@
       opacity: 0;
     }
 
-    .chapter-transition-overlay.is-active .sf-core-spark {
+    .chapter-transition-overlay.is-active .sf-core-spark,
+    .chapter-transition-overlay.is-fading-out .sf-core-spark {
       animation: sparkCenterBloom 2.2s var(--ease-velvet) 1.52s forwards;
     }
 
@@ -1604,6 +1660,7 @@
     }
 
     .b-field input[type="text"],
+    .b-field input[type="number"],
     .b-field select,
     .b-field textarea {
       width: 100%;
@@ -1661,49 +1718,42 @@
 </head>
 <body data-aura="gold">
 
-  <!-- ОКРУЖЕНИЕ ЗАЛА -->
+  <!-- ОКРУЖЕНИЕ ЗАЛА И ПОРТАЛ СЦЕНЫ -->
   <div class="room-environment">
     <div class="room-aura"></div>
 
-    <!-- КОНТЕЙНЕР 100VW + SCALE(1.0) -->
-    <div class="viewport-scaler" id="viewportScaler">
+    <div class="viewport-scaler">
       <div class="shadowbox-stage" id="shadowboxStage" data-mood="frost">
         <div class="cabinet-outer-shell"></div>
 
-        <!-- ВНУТРЕННЯЯ СЦЕНА ТЕАТРА -->
-        <div class="theater-niche">
-          <!-- Небо за горизонтом -->
+        <!-- ВНУТРЕННЯЯ НИША ТЕАТРА -->
+        <div class="theater-niche" id="theaterNiche">
+
+          <!-- НЕБОСВОД И ЖИЗНЬ ЗА ГОРИЗОНТОМ -->
           <div class="horizon-sky-dome">
             <div class="horizon-aurora"></div>
             <div class="horizon-moon"></div>
             <div class="shooting-star" id="shootingStar"></div>
           </div>
 
-          <!-- 3D Мир с многослойными снежными холмами и персонажами -->
+          <!-- 3D МИР И МНОГОСЛОЙНАЯ СНЕЖНАЯ ДИОРАМА -->
           <div class="stage-3d-world" id="stage3dWorld">
-            <div class="scene-backdrop-card" id="sceneBackdropCard" data-mask="arch"></div>
-
-            <!-- Снежное основание сцены -->
+            <div class="scene-backdrop-card" id="backdropCard" data-mask="arch"></div>
             <div class="stage-floor-deck"></div>
             <div class="moonlight-ground-wash"></div>
-
-            <!-- Дальний снежный холм-подиум под теремом, ёлками и фонарём -->
             <div class="diorama-hill-mid"></div>
-
-            <!-- Морозная дымка между планами -->
             <div class="midground-mist-layer"></div>
-
-            <!-- Передний снежный вал для главных героев -->
             <div class="diorama-snowbank-front"></div>
 
-            <!-- Следы на снегу -->
+            <!-- СЛОЙ СЛЕДОВ НА СНЕГУ -->
             <div class="footprints-layer" id="footprintsLayer"></div>
 
-            <!-- Слоты фигурок -->
+            <!-- СЛОЙ ФИГУРОК-СТЕНДИ -->
             <div class="standees-layer" id="standeesLayer">
-              <!-- Задний левый: Ёлка -->
+
               <div class="standee-slot" id="slot-left-back" data-slot="left-back">
                 <div class="snow-podium"></div>
+                <div class="standee-light-pool lantern-glow"></div>
                 <div class="standee-light-pool blue-glow"></div>
                 <div class="standee-art" data-anim="sway">
                   <img class="standee-img" src="tree-left.png" alt="" />
@@ -1715,11 +1765,11 @@
                 </div>
               </div>
 
-              <!-- Задний правый: Зимний фонарь -->
               <div class="standee-slot" id="slot-right-back" data-slot="right-back">
                 <div class="snow-podium"></div>
                 <div class="standee-light-pool lantern-glow"></div>
-                <div class="standee-art" data-anim="idle">
+                <div class="standee-light-pool blue-glow"></div>
+                <div class="standee-art" data-anim="sway">
                   <img class="standee-img" src="tree-right.png" alt="" />
                 </div>
                 <div class="snow-bury-cushion"></div>
@@ -1729,10 +1779,10 @@
                 </div>
               </div>
 
-              <!-- Средний центральный: Сказочный теремок / Главная ёлка -->
               <div class="standee-slot" id="slot-mid-center" data-slot="mid-center">
                 <div class="snow-podium"></div>
                 <div class="standee-light-pool lantern-glow"></div>
+                <div class="standee-light-pool blue-glow"></div>
                 <div class="standee-art" data-anim="idle">
                   <img class="standee-img" src="tavern.png" alt="" />
                 </div>
@@ -1743,10 +1793,10 @@
                 </div>
               </div>
 
-              <!-- Передний левый: 5-летний малыш Тимоша -->
               <div class="standee-slot" id="slot-front-left" data-slot="front-left">
                 <div class="snow-podium"></div>
                 <div class="standee-light-pool lantern-glow"></div>
+                <div class="standee-light-pool blue-glow"></div>
                 <div class="standee-art" data-anim="idle">
                   <img class="standee-img" src="hero.png" alt="" />
                 </div>
@@ -1757,10 +1807,10 @@
                 </div>
               </div>
 
-              <!-- Передний правый: Снеговик / Дедушка Мороз -->
               <div class="standee-slot" id="slot-front-right" data-slot="front-right">
                 <div class="snow-podium"></div>
                 <div class="standee-light-pool lantern-glow"></div>
+                <div class="standee-light-pool blue-glow"></div>
                 <div class="standee-art" data-anim="idle">
                   <img class="standee-img" src="snowman.png" alt="" />
                 </div>
@@ -1770,197 +1820,219 @@
                   <span class="speech-text-content"></span>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <!-- Слой снега и золотого Огонька-Проводника -->
-          <canvas id="fxCanvas" width="420" height="740"></canvas>
+            </div><!-- /standees-layer -->
+          </div><!-- /stage-3d-world -->
 
-          <!-- Внутренние тени стен, бархатный ламбрекен, рампа и золотая арка с филигранями -->
+          <!-- CANVAS СНЕГОПАДА И ОГОНЬКА-ПРОВОДНИКА -->
+          <canvas id="fxCanvas"></canvas>
+
+          <!-- ТЕАТРАЛЬНЫЙ ПРОСЦЕНИУМ, СТЕНЫ И ЗОЛОТАЯ ФИЛИГРАНЬ -->
           <div class="niche-inner-walls"></div>
+          <div class="chapter-prelude-veil" id="chapterPreludeVeil"></div>
           <div class="proscenium-curtain-valance"></div>
           <div class="proscenium-footlights"></div>
           <div class="proscenium-arch-frame">
-            <svg class="corner-filigree tl" viewBox="0 0 48 48" fill="none">
-              <path d="M2 46V12C2 6.477 6.477 2 12 2H46" stroke="#f3cc73" stroke-width="2" />
-              <path d="M8 38V14C8 10.686 10.686 8 14 8H38" stroke="#c89333" stroke-width="1.2" />
-              <circle cx="14" cy="14" r="3" fill="#f3cc73" />
+            <svg class="corner-filigree tl" viewBox="0 0 48 48">
+              <path d="M4 44 L4 14 Q4 4 14 4 L44 4" fill="none" stroke="#f3cc73" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M10 34 L10 16 Q10 10 16 10 L34 10" fill="none" stroke="#fff1c1" stroke-width="1.2" stroke-linecap="round" opacity="0.85"/>
+              <circle cx="14" cy="14" r="3" fill="#f3cc73"/>
+              <path d="M4 24 Q14 22 22 4" fill="none" stroke="#c89333" stroke-width="1.4"/>
             </svg>
-            <svg class="corner-filigree tr" viewBox="0 0 48 48" fill="none">
-              <path d="M2 46V12C2 6.477 6.477 2 12 2H46" stroke="#f3cc73" stroke-width="2" />
-              <path d="M8 38V14C8 10.686 10.686 8 14 8H38" stroke="#c89333" stroke-width="1.2" />
-              <circle cx="14" cy="14" r="3" fill="#f3cc73" />
+            <svg class="corner-filigree tr" viewBox="0 0 48 48">
+              <path d="M4 44 L4 14 Q4 4 14 4 L44 4" fill="none" stroke="#f3cc73" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M10 34 L10 16 Q10 10 16 10 L34 10" fill="none" stroke="#fff1c1" stroke-width="1.2" stroke-linecap="round" opacity="0.85"/>
+              <circle cx="14" cy="14" r="3" fill="#f3cc73"/>
+              <path d="M4 24 Q14 22 22 4" fill="none" stroke="#c89333" stroke-width="1.4"/>
             </svg>
-            <svg class="corner-filigree bl" viewBox="0 0 48 48" fill="none">
-              <path d="M2 46V12C2 6.477 6.477 2 12 2H46" stroke="#f3cc73" stroke-width="2" />
-              <path d="M8 38V14C8 10.686 10.686 8 14 8H38" stroke="#c89333" stroke-width="1.2" />
-              <circle cx="14" cy="14" r="3" fill="#f3cc73" />
+            <svg class="corner-filigree bl" viewBox="0 0 48 48">
+              <path d="M4 44 L4 14 Q4 4 14 4 L44 4" fill="none" stroke="#f3cc73" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M10 34 L10 16 Q10 10 16 10 L34 10" fill="none" stroke="#fff1c1" stroke-width="1.2" stroke-linecap="round" opacity="0.85"/>
+              <circle cx="14" cy="14" r="3" fill="#f3cc73"/>
+              <path d="M4 24 Q14 22 22 4" fill="none" stroke="#c89333" stroke-width="1.4"/>
             </svg>
-            <svg class="corner-filigree br" viewBox="0 0 48 48" fill="none">
-              <path d="M2 46V12C2 6.477 6.477 2 12 2H46" stroke="#f3cc73" stroke-width="2" />
-              <path d="M8 38V14C8 10.686 10.686 8 14 8H38" stroke="#c89333" stroke-width="1.2" />
-              <circle cx="14" cy="14" r="3" fill="#f3cc73" />
+            <svg class="corner-filigree br" viewBox="0 0 48 48">
+              <path d="M4 44 L4 14 Q4 4 14 4 L44 4" fill="none" stroke="#f3cc73" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M10 34 L10 16 Q10 10 16 10 L34 10" fill="none" stroke="#fff1c1" stroke-width="1.2" stroke-linecap="round" opacity="0.85"/>
+              <circle cx="14" cy="14" r="3" fill="#f3cc73"/>
+              <path d="M4 24 Q14 22 22 4" fill="none" stroke="#c89333" stroke-width="1.4"/>
             </svg>
           </div>
-        </div>
 
-        <!-- Деревянные створки шкатулки с разъёмным гравированным латунным замком -->
+        </div><!-- /theater-niche -->
+
+        <!-- СТВОРКИ ИМПЕРАТОРСКОЙ ШКАТУЛКИ С РАЗЪЁМНЫМ ЛАТУННЫМ ЗАМКОМ -->
         <div class="shutter-doors-wrap">
           <div class="shutter-door left-door">
             <div class="shutter-ornament-filigree"></div>
             <div class="shutter-center-medallion">
-              <svg class="medallion-engraving-svg" viewBox="0 0 100 100" fill="none">
-                <circle cx="50" cy="50" r="44" stroke="#4a2c06" stroke-width="1.5" stroke-dasharray="4 3" />
-                <circle cx="50" cy="50" r="34" stroke="#4a2c06" stroke-width="1.2" />
-                <path d="M50 8 L55 38 L85 25 L62 46 L92 50 L62 54 L85 75 L55 62 L50 92 L45 62 L15 75 L38 54 L8 50 L38 46 L15 25 L45 38 Z" fill="#4a2c06" fill-opacity="0.28" stroke="#3b2104" stroke-width="1.2" />
-                <circle cx="50" cy="50" r="8" fill="#3b2104" />
+              <svg class="medallion-engraving-svg" viewBox="-60 -60 120 120">
+                <circle cx="0" cy="0" r="50" fill="none" stroke="#5a3406" stroke-width="1.4" stroke-dasharray="4 3"/>
+                <circle cx="0" cy="0" r="40" fill="none" stroke="#fff6d6" stroke-width="1.3"/>
+                <polygon points="0,-44 10,-14 42,-14 16,5 26,35 0,17 -26,35 -16,5 -42,-14 -10,-14" fill="rgba(126,83,19,0.28)" stroke="#fff6d6" stroke-width="1.5"/>
+                <circle cx="0" cy="0" r="11" fill="#7e5313" stroke="#fff6d6" stroke-width="1.5"/>
               </svg>
             </div>
           </div>
+
           <div class="shutter-door right-door">
             <div class="shutter-ornament-filigree"></div>
             <div class="shutter-center-medallion">
-              <svg class="medallion-engraving-svg" viewBox="0 0 100 100" fill="none">
-                <circle cx="50" cy="50" r="44" stroke="#4a2c06" stroke-width="1.5" stroke-dasharray="4 3" />
-                <circle cx="50" cy="50" r="34" stroke="#4a2c06" stroke-width="1.2" />
-                <path d="M50 8 L55 38 L85 25 L62 46 L92 50 L62 54 L85 75 L55 62 L50 92 L45 62 L15 75 L38 54 L8 50 L38 46 L15 25 L45 38 Z" fill="#4a2c06" fill-opacity="0.28" stroke="#3b2104" stroke-width="1.2" />
-                <circle cx="50" cy="50" r="8" fill="#3b2104" />
+              <svg class="medallion-engraving-svg" viewBox="-60 -60 120 120">
+                <circle cx="0" cy="0" r="50" fill="none" stroke="#5a3406" stroke-width="1.4" stroke-dasharray="4 3"/>
+                <circle cx="0" cy="0" r="40" fill="none" stroke="#fff6d6" stroke-width="1.3"/>
+                <polygon points="0,-44 10,-14 42,-14 16,5 26,35 0,17 -26,35 -16,5 -42,-14 -10,-14" fill="rgba(126,83,19,0.28)" stroke="#fff6d6" stroke-width="1.5"/>
+                <circle cx="0" cy="0" r="11" fill="#7e5313" stroke="#fff6d6" stroke-width="1.5"/>
               </svg>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- ЮВЕЛИРНАЯ КНОПКА ОТКРЫТИЯ СКАЗКИ -->
+      </div><!-- /shadowbox-stage -->
+    </div><!-- /viewport-scaler -->
+  </div><!-- /room-environment -->
+
+  <!-- ЮВЕЛИРНАЯ КНОПКА ОТКРЫТИЯ ШКАТУЛКИ -->
   <div class="closed-cover-cta" id="closedCoverCta">
     <button class="open-fairytale-btn" id="openBookBtn" type="button">
-      <svg viewBox="0 0 24 24"><path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z" /></svg>
-      <span>Открыть шкатулку</span>
-      <svg viewBox="0 0 24 24"><path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z" /></svg>
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2L14.8 8.8L22 9.5L16.5 14.2L18.2 21.2L12 17.4L5.8 21.2L7.5 14.2L2 9.5L9.2 8.8L12 2Z"/>
+      </svg>
+      <span>Открыть сказку</span>
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2L14.8 8.8L22 9.5L16.5 14.2L18.2 21.2L12 17.4L5.8 21.2L7.5 14.2L2 9.5L9.2 8.8L12 2Z"/>
+      </svg>
     </button>
   </div>
 
-  <!-- НИЖНЯЯ ПАНЕЛЬ ЧТЕНИЯ И НАВИГАЦИИ -->
+  <!-- КОРОЛЕВСКИЙ СВИТОК АВТОРА И ДОК НАВИГАЦИИ -->
   <div class="story-reader-hud" id="storyReaderPanel">
-    <!-- Пергаментный свиток автора -->
     <div class="narrator-manuscript-drawer" id="narratorDrawer">
       <div class="narrator-chapter-badge">
-        <span id="hudChapterTitle">Глава I</span>
-        <span id="hudMoodLabel">Зимнее безмолвие</span>
+        <span id="chapterBadgeTitle">Глава I. Шёпот Зимнего Леса</span>
+        <span id="chapterStepBadge">Часть I</span>
       </div>
-      <div class="narrator-story-text" id="hudStepText"></div>
+      <div class="narrator-story-text" id="narratorText"></div>
     </div>
 
-    <!-- Кнопки управления с векторными стрелками -->
     <div class="reader-controls-dock">
       <button class="nav-step-btn" id="prevPageBtn" type="button">
-        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         <span>Назад</span>
       </button>
-      <div class="step-progress-pill" id="hudProgressIndicator">I • 1 / 4</div>
+
+      <div class="step-progress-pill" id="pageIndicator">Глава 1 • Шаг 1/4</div>
+
       <button class="nav-step-btn primary-next" id="nextPageBtn" type="button">
-        <span id="nextPageBtnLabel">Дальше</span>
-        <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        <span id="nextBtnLabel">Дальше</span>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     </div>
   </div>
 
-  <!-- ОПТИМИЗИРОВАННЫЙ ПЕРЕХОД МЕЖДУ ГЛАВАМИ (БЕЗ ТЕКСТА, С ВЕКТОРНОЙ SVG-СНЕЖИНКОЙ) -->
-  <div class="chapter-transition-overlay" id="chapterTransitionOverlay" aria-hidden="true">
+  <!-- ОПТИМИЗИРОВАННЫЙ ПЕРЕХОД МЕЖДУ ГЛАВАМИ (ЕДИНЫЕ КОНТУРЫ SVG В ЦЕНТРЕ 180,290) -->
+  <div class="chapter-transition-overlay" id="chapterTransitionOverlay">
     <div class="transition-bg-photo" id="transitionBgPhoto"></div>
     <div class="transition-aurora-rays"></div>
     <div class="transition-snow-swirl"></div>
     <div class="transition-frost-vignette"></div>
 
-    <svg class="transition-snowflake-svg" viewBox="0 0 360 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg class="transition-snowflake-svg" viewBox="0 0 360 640" preserveAspectRatio="xMidYMid meet">
       <defs>
-        <linearGradient id="stemGoldGrad" x1="180" y1="640" x2="180" y2="290" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#f6d365" stop-opacity="0.15" />
-          <stop offset="45%" stop-color="#ffe79e" stop-opacity="0.95" />
+        <linearGradient id="stemGoldGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stop-color="#c89333" stop-opacity="0.2" />
+          <stop offset="45%" stop-color="#f3cc73" stop-opacity="0.95" />
           <stop offset="100%" stop-color="#ffffff" stop-opacity="1" />
         </linearGradient>
-        <linearGradient id="crystalIceGrad" x1="90" y1="200" x2="270" y2="380" gradientUnits="userSpaceOnUse">
+        <linearGradient id="crystalIceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="#ffffff" />
-          <stop offset="55%" stop-color="#d8f1ff" />
-          <stop offset="100%" stop-color="#ffe596" />
+          <stop offset="55%" stop-color="#fff1c1" />
+          <stop offset="100%" stop-color="#b6e3ff" />
         </linearGradient>
       </defs>
 
-      <!-- Единая волшебная нить, взлетающая снизу к центру -->
-      <path class="svg-flight-stem-glow" d="M 180 640 C 128 535, 232 425, 180 290" />
-      <path class="svg-flight-stem" d="M 180 640 C 128 535, 232 425, 180 290" />
+      <!-- Взмывающая снизу нить к центру (180, 290), длина = 390 (под stroke-dasharray: 430) -->
+      <path class="svg-flight-stem-glow" d="M 180 650 C 154 540, 206 410, 180 290" />
+      <path class="svg-flight-stem" d="M 180 650 C 154 540, 206 410, 180 290" />
 
-      <!-- Распускающаяся снежинка в центре (180, 290) -->
+      <!-- Расцветающая снежинка с центром в (180, 290) -->
       <g class="svg-snowflake-bloom">
-        <g>
-          <path class="sf-main-ray-glow" d="M180 290 L180 182" />
-          <path class="sf-main-ray-glow" d="M180 290 L273.5 236" />
-          <path class="sf-main-ray-glow" d="M180 290 L273.5 344" />
-          <path class="sf-main-ray-glow" d="M180 290 L180 398" />
-          <path class="sf-main-ray-glow" d="M180 290 L86.5 344" />
-          <path class="sf-main-ray-glow" d="M180 290 L86.5 236" />
+        <!-- 1. Единый контур свечения всех 6 главных лучей (каждый сегмент = 114px под dasharray: 120) -->
+        <path class="sf-main-ray-glow" d="
+          M 180 290 L 180 176
+          M 180 290 L 278.73 233
+          M 180 290 L 278.73 347
+          M 180 290 L 180 404
+          M 180 290 L 81.27 347
+          M 180 290 L 81.27 233
+        " />
 
-          <path class="sf-main-ray" d="M180 290 L180 182" />
-          <path class="sf-main-ray" d="M180 290 L273.5 236" />
-          <path class="sf-main-ray" d="M180 290 L273.5 344" />
-          <path class="sf-main-ray" d="M180 290 L180 398" />
-          <path class="sf-main-ray" d="M180 290 L86.5 344" />
-          <path class="sf-main-ray" d="M180 290 L86.5 236" />
-        </g>
+        <!-- 2. Единый контур всех 6 главных лучей -->
+        <path class="sf-main-ray" d="
+          M 180 290 L 180 176
+          M 180 290 L 278.73 233
+          M 180 290 L 278.73 347
+          M 180 290 L 180 404
+          M 180 290 L 81.27 347
+          M 180 290 L 81.27 233
+        " />
 
-        <g>
-          <path class="sf-branch-detail" d="M162 238 L180 220 L198 238 M168 210 L180 196 L192 210" />
-          <path class="sf-branch-detail" d="M162 238 L180 220 L198 238 M168 210 L180 196 L192 210" transform="rotate(60 180 290)" />
-          <path class="sf-branch-detail" d="M162 238 L180 220 L198 238 M168 210 L180 196 L192 210" transform="rotate(120 180 290)" />
-          <path class="sf-branch-detail" d="M162 238 L180 220 L198 238 M168 210 L180 196 L192 210" transform="rotate(180 180 290)" />
-          <path class="sf-branch-detail" d="M162 238 L180 220 L198 238 M168 210 L180 196 L192 210" transform="rotate(240 180 290)" />
-          <path class="sf-branch-detail" d="M162 238 L180 220 L198 238 M168 210 L180 196 L192 210" transform="rotate(300 180 290)" />
-        </g>
+        <!-- 3. Единый контур всех боковых веточек и кристальных верхушек (под dasharray: 140) -->
+        <path class="sf-branch-detail" d="
+          M 158 228 L 180 248 L 202 228 M 152 198 L 180 222 L 208 198
+          M 222.7 241.0 L 216.4 269.0 L 244.7 279.1 M 244.3 219.9 L 238.9 256.0 L 272.3 268.4
+          M 244.7 300.9 L 216.4 311.0 L 222.7 339.0 M 272.3 311.6 L 238.9 324.0 L 244.3 360.1
+          M 202 352 L 180 332 L 158 352 M 208 382 L 180 358 L 152 382
+          M 137.3 339.0 L 143.6 311.0 L 115.3 300.9 M 115.7 360.1 L 121.1 324.0 L 87.7 311.6
+          M 115.3 279.1 L 143.6 269.0 L 137.3 241.0 M 87.7 268.4 L 121.1 256.0 L 115.7 219.9
+        " />
 
-        <polygon class="sf-center-gem" points="180,254 211,272 211,308 180,326 149,308 149,272" />
-        <circle class="sf-core-spark" cx="180" cy="290" r="5.5" />
+        <!-- 4. Центральный гранёный кристалл (периметр = 192 под dasharray: 220) -->
+        <polygon class="sf-center-gem" points="180,258 207.7,274 207.7,306 180,322 152.3,306 152.3,274" />
       </g>
+
+      <!-- Центральная искра в точке (180, 290) -->
+      <polygon class="sf-core-spark" points="180,272 184,286 198,290 184,294 180,308 176,294 162,290 176,286" />
     </svg>
   </div>
 
-  <!-- ФИНАЛЬНАЯ ИМПЕРАТОРСКАЯ ГРАМОТА ЗАКРЫТИЯ СКАЗКИ (БЕЗ ПОВТОРА И БЕЗ ЭМОДЗИ) -->
-  <div class="story-finale-overlay" id="storyFinaleOverlay" aria-hidden="true">
+  <!-- ФИНАЛЬНАЯ ИМПЕРАТОРСКАЯ ГРАМОТА ЗАКРЫТИЯ СКАЗКИ -->
+  <div class="story-finale-overlay" id="storyFinaleOverlay">
     <div class="finale-royal-scroll">
       <div class="finale-wax-seal">
-        <svg viewBox="0 0 64 64" fill="none">
-          <circle cx="32" cy="32" r="28" stroke="#4a2c06" stroke-width="1.4" stroke-dasharray="3 2" />
-          <path d="M32 10 L35 17 L42 17 L36.5 21.5 L38.5 28.5 L32 24 L25.5 28.5 L27.5 21.5 L22 17 L29 17 Z" fill="#3d2204" />
-          <path d="M32 22 L44 38 H37 L47 50 H17 L27 38 H20 L32 22 Z" fill="#4a2c06" fill-opacity="0.35" stroke="#3d2204" stroke-width="1.6" stroke-linejoin="round" />
+        <svg viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="20" fill="none" stroke="#5a3406" stroke-width="1.2" stroke-dasharray="3 2"/>
+          <path d="M24 8 L15 21 L20 21 L12 32 L21 32 L21 39 L27 39 L27 32 L36 32 L28 21 L33 21 Z" fill="#5a3406"/>
         </svg>
       </div>
       <div class="finale-subtitle">Сказка бережно хранится в сердце</div>
-      <h2 class="finale-title">С Новым Годом и Рождеством</h2>
+      <h2 class="finale-title">С Новым Годом и Рождеством!</h2>
       <p class="finale-message">
-        Резные створки новогодней шкатулки тихо сомкнулись, но тёплый золотой огонёк этой ночи останется с вами — согревая дом уютом, добротой и верой в чудо.
+        Резные створки старинной шкатулки тихо сомкнулись, но золотой огонёк зимнего чуда остался с вами. Пусть в вашем доме всегда живут тепло, согласие и вера в доброе волшебство.
       </p>
       <div class="finale-ornament-divider">
-        <svg viewBox="0 0 200 20" fill="none">
-          <path d="M10 10 H82 M118 10 H190" stroke="#9e6814" stroke-width="1.2" />
-          <path d="M100 2 L104 10 L100 18 L96 10 Z" fill="#9e6814" />
-          <circle cx="88" cy="10" r="2" fill="#9e6814" />
-          <circle cx="112" cy="10" r="2" fill="#9e6814" />
+        <svg viewBox="0 0 170 18">
+          <line x1="10" y1="9" x2="70" y2="9" stroke="#a8752a" stroke-width="1.3"/>
+          <polygon points="85,2 92,9 85,16 78,9" fill="#a8752a"/>
+          <line x1="100" y1="9" x2="160" y2="9" stroke="#a8752a" stroke-width="1.3"/>
         </svg>
       </div>
-      <div class="finale-closed-signature">Шкатулка закрыта до следующей новогодней ночи</div>
+      <div class="finale-closed-signature">Императорский Театр Миниатюр</div>
     </div>
   </div>
 
-  <!-- КНОПКА И ПАНЕЛЬ КОНСТРУКТОРА (УДАЛЯЮТСЯ ПРИ ЭКСПОРТЕ) -->
+  <!-- 3-ВКЛАДОЧНЫЙ КОНСТРУКТОР -->
   <button class="builder-toggle-btn" id="builderToggleBtn" type="button">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    <span>Режиссёр</span>
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+    <span>Конструктор</span>
   </button>
 
   <aside class="builder-drawer" id="builderDrawer">
     <div class="builder-header">
-      <h3>Режиссёр Шкатулки</h3>
+      <h3>Режиссёрская Студия</h3>
       <button class="builder-close-btn" id="builderCloseBtn" type="button">Закрыть</button>
     </div>
 
@@ -1971,51 +2043,51 @@
     </div>
 
     <div class="builder-body">
-      <!-- ВКЛАДКА 1: НАСТРОЙКИ ШКАТУЛКИ -->
+      <!-- ВКЛАДКА 1: ШКАТУЛКА -->
       <div class="builder-tab-pane is-active" id="tab-book">
         <div class="b-field">
-          <label>Масштаб камеры <span id="valZoom">1.00</span></label>
-          <input type="range" id="bZoomSlider" min="0.85" max="1.15" step="0.01" value="1" />
+          <label>Масштаб сцены (Zoom)</label>
+          <input id="bZoomSlider" type="range" min="0.85" max="1.15" step="0.01" value="1" />
         </div>
         <div class="b-field">
-          <label>Глубина 3D-планов <span id="valPop">1.00</span></label>
-          <input type="range" id="bPopBoostSlider" min="0.5" max="1.6" step="0.05" value="1" />
+          <label>Глубина 3D (Pop Boost)</label>
+          <input id="bPopBoostSlider" type="range" min="0.5" max="1.6" step="0.05" value="1" />
         </div>
         <div class="b-field">
-          <label>Наклон сцены X <span id="valRotX">4°</span></label>
-          <input type="range" id="bCamRotXSlider" min="-6" max="12" step="1" value="4" />
+          <label>Наклон камеры X (deg)</label>
+          <input id="bCamRotXSlider" type="range" min="0" max="14" step="0.5" value="4" />
         </div>
         <div class="b-field">
-          <label>Поворот сцены Z <span id="valRotZ">0°</span></label>
-          <input type="range" id="bCamRotZSlider" min="-6" max="6" step="1" value="0" />
+          <label>Поворот камеры Z (deg)</label>
+          <input id="bCamRotZSlider" type="range" min="-8" max="8" step="0.5" value="0" />
         </div>
         <div class="b-field">
           <label>Аура зала</label>
           <select id="bAuraSelect">
-            <option value="gold">Золотое Рождество</option>
-            <option value="aurora">Северное Сияние</option>
-            <option value="crimson">Зимний Камин</option>
+            <option value="gold">Золотое сияние</option>
+            <option value="aurora">Северное сияние</option>
+            <option value="crimson">Бархатный багрянец</option>
           </select>
         </div>
         <div class="b-divider"></div>
         <div class="b-field">
-          <label>Текстура комнаты (room.png)</label>
-          <input type="text" id="bRoomTexInput" value="room.png" />
+          <label>Текстура зала (room.png)</label>
+          <input id="bRoomTexInput" type="text" value="room.png" />
         </div>
         <div class="b-field">
           <label>Текстура створок (cover.png)</label>
-          <input type="text" id="bCoverTexInput" value="cover.png" />
+          <input id="bCoverTexInput" type="text" value="cover.png" />
         </div>
         <div class="b-field">
-          <label>Текстура бумаги (paper.png)</label>
-          <input type="text" id="bPaperTexInput" value="paper.png" />
+          <label>Текстура пергамента (paper.png)</label>
+          <input id="bPaperTexInput" type="text" value="paper.png" />
         </div>
       </div>
 
-      <!-- ВКЛАДКА 2: СЦЕНЫ И СЛОТЫ -->
+      <!-- ВКЛАДКА 2: СЦЕНЫ -->
       <div class="builder-tab-pane" id="tab-spreads">
         <div class="b-field">
-          <label>Активная глава (сцена)</label>
+          <label>Глава (Разворот)</label>
           <select id="bSpreadSelect"></select>
         </div>
         <div class="b-row-2">
@@ -2023,24 +2095,24 @@
           <button class="b-btn danger" id="bDelSpreadBtn" type="button">Удалить</button>
         </div>
         <div class="b-field">
-          <label>Название главы</label>
-          <input type="text" id="bSpreadTitle" />
+          <label>Заголовок главы</label>
+          <input id="bSpreadTitle" type="text" />
         </div>
         <div class="b-field">
-          <label>Фон перехода в эту главу (9:16)</label>
-          <input type="text" id="bTransitionImgInput" placeholder="transition-1.png" />
+          <label>Иллюстрация перехода (9:16 PNG)</label>
+          <input id="bTransitionImgInput" type="text" placeholder="transition-1.png" />
         </div>
         <div class="b-row-2">
           <div class="b-field">
-            <label>Макет глубины</label>
+            <label>Пресет расстановки</label>
             <select id="bLayoutSelect">
               <option value="layout-1">Лесная опушка</option>
-              <option value="layout-2">У теремка</option>
+              <option value="layout-2">У терема</option>
               <option value="layout-4">Главная ёлка</option>
             </select>
           </div>
           <div class="b-field">
-            <label>Маска задника</label>
+            <label>Маска фона</label>
             <select id="bBackdropMaskSelect">
               <option value="arch">Арка</option>
               <option value="soft">Мягкая</option>
@@ -2048,67 +2120,64 @@
             </select>
           </div>
         </div>
-
         <div class="b-divider"></div>
-
         <div class="b-field">
           <label>Редактируемый слот</label>
           <select id="bSlotSelect">
-            <option value="bg">Фон сцены (bg-scene*.png)</option>
-            <option value="left-back">Задний левый (tree-left.png)</option>
-            <option value="right-back">Задний правый (tree-right.png)</option>
-            <option value="mid-center">Средний центр (дом / ёлка)</option>
-            <option value="front-left">Передний левый (герой)</option>
-            <option value="front-right">Передний правый (снеговик / Дед Мороз)</option>
+            <option value="bg">Задний фон (bg)</option>
+            <option value="left-back">Левый дальний (left-back)</option>
+            <option value="right-back">Правый дальний (right-back)</option>
+            <option value="mid-center">Средний центр (mid-center)</option>
+            <option value="front-left">Передний левый (front-left)</option>
+            <option value="front-right">Передний правый (front-right)</option>
           </select>
         </div>
         <div class="b-field">
           <label>Файл изображения (PNG)</label>
-          <input type="text" id="bSlotImg" />
+          <input id="bSlotImg" type="text" />
         </div>
         <div class="b-field">
           <label>Имя говорящего</label>
-          <input type="text" id="bSlotSpeakerName" />
+          <input id="bSlotSpeakerName" type="text" />
         </div>
         <div class="b-row-2">
           <select id="bSwapTargetSelect">
-            <option value="left-back">Задний левый</option>
-            <option value="right-back">Задний правый</option>
-            <option value="mid-center">Средний центр</option>
-            <option value="front-left">Передний левый</option>
-            <option value="front-right">Передний правый</option>
+            <option value="left-back">left-back</option>
+            <option value="right-back">right-back</option>
+            <option value="mid-center">mid-center</option>
+            <option value="front-left">front-left</option>
+            <option value="front-right">front-right</option>
           </select>
-          <button class="b-btn" id="bSwapBtn" type="button">Поменять местами</button>
+          <button class="b-btn" id="bSwapBtn" type="button">Обменять слоты</button>
         </div>
-
+        <div class="b-row-2">
+          <div class="b-field">
+            <label>X (%)</label>
+            <input id="bSlotXInput" type="number" step="1" />
+          </div>
+          <div class="b-field">
+            <label>Y (%)</label>
+            <input id="bSlotYInput" type="number" step="1" />
+          </div>
+        </div>
+        <div class="b-row-2">
+          <div class="b-field">
+            <label>Ширина (px)</label>
+            <input id="bSlotWInput" type="number" step="2" />
+          </div>
+          <div class="b-field">
+            <label>Высота (px)</label>
+            <input id="bSlotHInput" type="number" step="2" />
+          </div>
+        </div>
         <div class="b-field">
-          <label>Масштаб слота <span id="valSlotScale">1.00</span></label>
-          <input type="range" id="bSlotScaleInput" min="0.5" max="1.6" step="0.02" value="1" />
+          <label>Масштаб слота</label>
+          <input id="bSlotScaleInput" type="number" step="0.02" />
         </div>
-        <div class="b-row-2">
-          <div class="b-field">
-            <label>Позиция X (%) <span id="valSlotX">50</span></label>
-            <input type="range" id="bSlotXInput" min="0" max="100" step="1" value="50" />
-          </div>
-          <div class="b-field">
-            <label>Позиция Y (%) <span id="valSlotY">70</span></label>
-            <input type="range" id="bSlotYInput" min="15" max="95" step="1" value="70" />
-          </div>
-        </div>
-        <div class="b-row-2">
-          <div class="b-field">
-            <label>Ширина (px) <span id="valSlotW">160</span></label>
-            <input type="range" id="bSlotWInput" min="80" max="420" step="2" value="160" />
-          </div>
-          <div class="b-field">
-            <label>Высота (px) <span id="valSlotH">230</span></label>
-            <input type="range" id="bSlotHInput" min="90" max="580" step="2" value="230" />
-          </div>
-        </div>
-        <button class="b-btn" id="bResetSlotCustomBtn" type="button">Сбросить слот к макету</button>
+        <button class="b-btn" id="bResetSlotCustomBtn" type="button">Сбросить к пресету</button>
       </div>
 
-      <!-- ВКЛАДКА 3: ШАГИ И ХОРЕОГРАФИЯ -->
+      <!-- ВКЛАДКА 3: ШАГИ -->
       <div class="builder-tab-pane" id="tab-steps">
         <div class="b-field">
           <label>Шаг внутри главы</label>
@@ -2119,1300 +2188,1348 @@
           <button class="b-btn danger" id="bDelStepBtn" type="button">Удалить шаг</button>
         </div>
         <div class="b-field">
-          <label>Текст от автора (показывается, если реплики персонажей пустые)</label>
+          <label>Текст рассказчика (в свитке)</label>
           <textarea id="bStepText"></textarea>
         </div>
         <div class="b-row-2">
           <div class="b-field">
             <label>Освещение (Клаус)</label>
             <select id="bStepMoodSelect">
-              <option value="frost">Морозная полночь</option>
-              <option value="warmth">Тёплое сияние</option>
+              <option value="frost">Морозная ночь</option>
+              <option value="warmth">Янтарное тепло</option>
             </select>
           </div>
           <div class="b-field">
-            <label>Цель Огонька</label>
+            <label>Цель огонька</label>
             <select id="bStepFireflySelect">
-              <option value="front-left">Малыш Тимоша</option>
-              <option value="front-right">Снеговик / Дед Мороз</option>
-              <option value="mid-center">Терем / Ёлка</option>
-              <option value="right-back">Зимний фонарь</option>
-              <option value="left-back">Заснеженная ель</option>
+              <option value="front-left">front-left</option>
+              <option value="front-right">front-right</option>
+              <option value="mid-center">mid-center</option>
+              <option value="left-back">left-back</option>
+              <option value="right-back">right-back</option>
             </select>
           </div>
         </div>
-
         <div class="b-divider"></div>
-
         <div class="b-field">
-          <label>Актёр на этом шаге</label>
+          <label>Настройка актёра на шаге</label>
           <select id="bActorSlotSelect">
-            <option value="front-left">Передний левый (Малыш)</option>
-            <option value="front-right">Передний правый (Снеговик / Дед Мороз)</option>
-            <option value="mid-center">Средний центр (Терем / Ёлка)</option>
-            <option value="left-back">Задний левый (Ель)</option>
-            <option value="right-back">Задний правый (Фонарь)</option>
+            <option value="front-left">Передний левый (front-left)</option>
+            <option value="front-right">Передний правый (front-right)</option>
+            <option value="mid-center">Средний центр (mid-center)</option>
+            <option value="left-back">Левый дальний (left-back)</option>
+            <option value="right-back">Правый дальний (right-back)</option>
           </select>
         </div>
         <div class="b-row-2">
-          <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;">
-            <input type="checkbox" id="bActorVisible" checked /> Видим на сцене
-          </label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;">
-            <input type="checkbox" id="bActorFlip" /> Отразить по X
-          </label>
+          <label><input id="bActorVisible" type="checkbox" checked /> Видим</label>
+          <label><input id="bActorFlip" type="checkbox" /> Отразить по X</label>
         </div>
         <div class="b-field">
-          <label>Реплика персонажа (если заполнена — свиток автора прячется)</label>
-          <input type="text" id="bActorSpeech" placeholder="Оставьте пустым для текста автора..." />
+          <label>Реплика героя (скрывает свиток автора)</label>
+          <input id="bActorSpeech" type="text" placeholder="Пусто — говорит автор" />
         </div>
         <div class="b-field">
-          <label>Анимация фигурки</label>
+          <label>Характер движения</label>
           <select id="bActorAnim">
-            <option value="idle">Спокойное дыхание</option>
-            <option value="talk">Тёплый рассказ</option>
-            <option value="float">Сказочное парение</option>
-            <option value="sway">Покачивание ветвей</option>
-            <option value="bow">Добрый поклон</option>
+            <option value="idle">Спокойное дыхание (idle)</option>
+            <option value="talk">Тёплый рассказ (talk)</option>
+            <option value="float">Плавное парение (float)</option>
+            <option value="sway">Колыхание ветвей (sway)</option>
+            <option value="bow">Поклон (bow)</option>
           </select>
         </div>
         <div class="b-row-2">
           <div class="b-field">
-            <label>Смещение dX (%) <span id="valActDx">0</span></label>
-            <input type="range" id="bActorDx" min="-35" max="35" step="1" value="0" />
+            <label>Смещение dX (%)</label>
+            <input id="bActorDx" type="number" step="1" value="0" />
           </div>
           <div class="b-field">
-            <label>Смещение dY (%) <span id="valActDy">0</span></label>
-            <input type="range" id="bActorDy" min="-20" max="20" step="1" value="0" />
+            <label>Смещение dY (%)</label>
+            <input id="bActorDy" type="number" step="1" value="0" />
           </div>
         </div>
         <div class="b-field">
-          <label>Масштаб в шаге <span id="valActScale">1.00</span></label>
-          <input type="range" id="bActorScale" min="0.65" max="1.35" step="0.02" value="1" />
+          <label>Масштаб на шаге</label>
+          <input id="bActorScale" type="number" step="0.02" value="1" />
         </div>
-
-        <button class="b-btn export-main" id="exportHtmlBtn" type="button">Скачать чистый index.html</button>
+        <button class="b-btn export-main" id="exportHtmlBtn" type="button">Экспортировать чистый HTML</button>
       </div>
     </div>
   </aside>
 
-  <script id="fairytaleEngineScript">
-    (function () {
-      const SLOT_KEYS = ["left-back", "right-back", "mid-center", "front-left", "front-right"];
-      const ROMAN_NUMERALS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+  <script id="fairytaleLogicScript">
+  (function() {
+    const STAGE_REF_W = 396;
+    const STAGE_REF_H = 560;
 
-      const LAYOUT_PRESETS = {
-        "layout-1": {
-          "bg": { x: 50, y: 38, w: 396, h: 560, scale: 1 },
-          "left-back": { x: 14, y: 62, w: 170, h: 275, scale: 0.94 },
-          "right-back": { x: 86, y: 61, w: 140, h: 250, scale: 0.90 },
-          "mid-center": { x: 58, y: 60, w: 215, h: 205, scale: 0.86 },
-          "front-left": { x: 25, y: 75, w: 146, h: 225, scale: 1.0 },
-          "front-right": { x: 75, y: 75, w: 158, h: 235, scale: 1.0 }
-        },
-        "layout-2": {
-          "bg": { x: 50, y: 38, w: 396, h: 560, scale: 1 },
-          "left-back": { x: 13, y: 61, w: 165, h: 270, scale: 0.92 },
-          "right-back": { x: 86, y: 60, w: 140, h: 245, scale: 0.88 },
-          "mid-center": { x: 50, y: 59, w: 220, h: 210, scale: 0.88 },
-          "front-left": { x: 24, y: 75, w: 146, h: 225, scale: 1.0 },
-          "front-right": { x: 75, y: 75, w: 162, h: 238, scale: 1.0 }
-        },
-        "layout-4": {
-          "bg": { x: 50, y: 38, w: 396, h: 560, scale: 1 },
-          "left-back": { x: 12, y: 62, w: 160, h: 265, scale: 0.90 },
-          "right-back": { x: 87, y: 61, w: 138, h: 242, scale: 0.88 },
-          "mid-center": { x: 50, y: 63, w: 235, h: 280, scale: 0.96 },
-          "front-left": { x: 23, y: 76, w: 144, h: 222, scale: 1.0 },
-          "front-right": { x: 76, y: 76, w: 174, h: 262, scale: 1.02 }
-        }
-      };
+    const LAYOUT_PRESETS = {
+      'layout-1': {
+        'bg':          { x: 50, y: 38, w: 396, h: 560, scale: 1.00 },
+        'left-back':   { x: 14, y: 62, w: 170, h: 275, scale: 0.94 },
+        'right-back':  { x: 86, y: 61, w: 140, h: 250, scale: 0.90 },
+        'mid-center':  { x: 58, y: 60, w: 215, h: 205, scale: 0.86 },
+        'front-left':  { x: 25, y: 75, w: 146, h: 225, scale: 1.00 },
+        'front-right': { x: 75, y: 75, w: 158, h: 235, scale: 1.00 }
+      },
+      'layout-2': {
+        'bg':          { x: 50, y: 38, w: 396, h: 560, scale: 1.00 },
+        'left-back':   { x: 13, y: 61, w: 165, h: 270, scale: 0.92 },
+        'right-back':  { x: 86, y: 60, w: 140, h: 245, scale: 0.88 },
+        'mid-center':  { x: 50, y: 59, w: 220, h: 210, scale: 0.88 },
+        'front-left':  { x: 24, y: 75, w: 146, h: 225, scale: 1.00 },
+        'front-right': { x: 75, y: 75, w: 162, h: 238, scale: 1.00 }
+      },
+      'layout-4': {
+        'bg':          { x: 50, y: 38, w: 396, h: 560, scale: 1.00 },
+        'left-back':   { x: 12, y: 62, w: 160, h: 265, scale: 0.90 },
+        'right-back':  { x: 87, y: 61, w: 138, h: 242, scale: 0.88 },
+        'mid-center':  { x: 50, y: 63, w: 235, h: 280, scale: 0.96 },
+        'front-left':  { x: 23, y: 76, w: 144, h: 222, scale: 1.00 },
+        'front-right': { x: 76, y: 76, w: 174, h: 262, scale: 1.02 }
+      }
+    };
 
-      const INITIAL_STORY_STATE = {
-        settings: {
-          zoom: 1,
-          popBoost: 1,
-          camRotX: 4,
-          camRotZ: 0,
-          aura: "gold",
-          roomTex: "room.png",
-          coverTex: "cover.png",
-          paperTex: "paper.png"
-        },
-        spreads: [
-          {
-            id: "spread-1",
-            title: "Глава I. Огонёк в зимнем лесу",
-            layout: "layout-1",
-            backdropMask: "arch",
-            transitionImg: "transition-1.png",
-            slots: {
-              "bg": { img: "bg-scene1.png", speaker: "", custom: null },
-              "left-back": { img: "tree-left.png", speaker: "Старая Ель", custom: null },
-              "right-back": { img: "tree-right.png", speaker: "Лесной Фонарь", custom: null },
-              "mid-center": { img: "tavern.png", speaker: "Лесной Теремок", custom: null },
-              "front-left": { img: "hero.png", speaker: "Малыш Тимоша", custom: null },
-              "front-right": { img: "snowman.png", speaker: "Снеговик Пушок", custom: null }
-            },
-            steps: [
-              {
-                text: "В канун Нового года пушистый снег укутал сонный лес глубокими сугробами. Пятилетний малыш Тимоша вышел на опушку с тёплым фонариком, чтобы отыскать потерянную звезду главной ёлки.",
-                mood: "frost",
-                fireflyTarget: "front-left",
-                actors: {
-                  "left-back": { visible: true, flip: false, speech: "", anim: "sway", dx: 0, dy: 0, scale: 1 },
-                  "right-back": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "mid-center": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "front-left": { visible: true, flip: false, speech: "", anim: "idle", dx: -4, dy: 0, scale: 1 },
-                  "front-right": { visible: false, flip: false, speech: "", anim: "idle", dx: 8, dy: 0, scale: 0.94 }
-                }
-              },
-              {
-                text: "",
-                mood: "frost",
-                fireflyTarget: "front-left",
-                actors: {
-                  "left-back": { visible: true, flip: false, speech: "", anim: "sway", dx: 0, dy: 0, scale: 1 },
-                  "right-back": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "mid-center": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "front-left": {
-                    visible: true,
-                    flip: false,
-                    speech: "Огоньку-проводник, посвети мне пониже у снежной тропинки! Куда укатилась новогодняя звёздочка?",
-                    anim: "talk",
-                    dx: 3,
-                    dy: 0,
-                    scale: 1.02
-                  },
-                  "front-right": { visible: false, flip: false, speech: "", anim: "idle", dx: 8, dy: 0, scale: 0.94 }
-                }
-              },
-              {
-                text: "Золотая искорка мягко закружилась у самых валенок малыша и перелетела к сугробу справа. Снег радостно заскрипел, и навстречу Тимоше шагнул улыбчивый Снеговик в тёплом шарфе.",
-                mood: "warmth",
-                fireflyTarget: "front-right",
-                actors: {
-                  "left-back": { visible: true, flip: false, speech: "", anim: "sway", dx: 0, dy: 0, scale: 1 },
-                  "right-back": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "mid-center": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "front-left": { visible: true, flip: false, speech: "", anim: "idle", dx: 2, dy: 0, scale: 1 },
-                  "front-right": { visible: true, flip: false, speech: "", anim: "float", dx: 0, dy: 0, scale: 1 }
-                }
-              },
-              {
-                text: "",
-                mood: "warmth",
-                fireflyTarget: "front-right",
-                actors: {
-                  "left-back": { visible: true, flip: false, speech: "", anim: "sway", dx: 0, dy: 0, scale: 1 },
-                  "right-back": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "mid-center": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "front-left": { visible: true, flip: false, speech: "", anim: "idle", dx: 2, dy: 0, scale: 1 },
-                  "front-right": {
-                    visible: true,
-                    flip: false,
-                    speech: "Не робей, Тимоша! Идём к резному теремку на холме — там хранится волшебный ключ полуночи!",
-                    anim: "talk",
-                    dx: -3,
-                    dy: 0,
-                    scale: 1.03
-                  }
-                }
-              }
-            ]
+    const DEFAULT_STORY_DATA = {
+      settings: {
+        zoom: 1,
+        popBoost: 1,
+        camRotX: 4,
+        camRotZ: 0,
+        aura: 'gold',
+        roomTex: 'room.png',
+        coverTex: 'cover.png',
+        paperTex: 'paper.png'
+      },
+      spreads: [
+        /* ---------------- ГЛАВА 1 ---------------- */
+        {
+          title: 'Глава I. Шёпот Зимнего Леса',
+          layout: 'layout-1',
+          backdropMask: 'arch',
+          transitionImg: 'transition-1.png',
+          slots: {
+            'bg':          { img: 'bg-scene1.png',  speaker: '',           custom: null },
+            'left-back':   { img: 'tree-left.png',  speaker: 'Старая Ель', custom: null },
+            'right-back':  { img: 'tree-right.png', speaker: 'Сосна',      custom: null },
+            'mid-center':  { img: 'tavern.png',     speaker: 'Сторож',     custom: null },
+            'front-left':  { img: 'hero.png',       speaker: 'Тимоша',     custom: null },
+            'front-right': { img: 'snowman.png',    speaker: 'Снеговик',   custom: null }
           },
-          {
-            id: "spread-2",
-            title: "Глава II. Тайна тёплого теремка",
-            layout: "layout-2",
-            backdropMask: "arch",
-            transitionImg: "transition-1.png",
-            slots: {
-              "bg": { img: "bg-scene2.png", speaker: "", custom: null },
-              "left-back": { img: "tree-left.png", speaker: "Заснеженная Ель", custom: null },
-              "right-back": { img: "tree-right.png", speaker: "Старинный Фонарь", custom: null },
-              "mid-center": { img: "tavern.png", speaker: "Сказочный Теремок", custom: null },
-              "front-left": { img: "hero.png", speaker: "Малыш Тимоша", custom: null },
-              "front-right": { img: "snowman.png", speaker: "Снеговик Пушок", custom: null }
-            },
-            steps: [
-              {
-                text: "По глубокой снежной тропинке друзья поднялись к бревенчатому теремку. В его окошках заиграл янтарный свет, согревая пушистые сугробы и превращая стужу в домашний уют.",
-                mood: "warmth",
-                fireflyTarget: "mid-center",
-                actors: {
-                  "left-back": { visible: true, flip: false, speech: "", anim: "sway", dx: 0, dy: 0, scale: 1 },
-                  "right-back": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "mid-center": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1.02 },
-                  "front-left": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "front-right": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 }
-                }
-              },
-              {
-                text: "",
-                mood: "warmth",
-                fireflyTarget: "front-left",
-                actors: {
-                  "left-back": { visible: true, flip: false, speech: "", anim: "sway", dx: 0, dy: 0, scale: 1 },
-                  "right-back": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "mid-center": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1.02 },
-                  "front-left": {
-                    visible: true,
-                    flip: false,
-                    speech: "Смотри, Пушок! На крылечке теремка поёт серебряный колокольчик, а от его звона снег искрится золотом!",
-                    anim: "talk",
-                    dx: 5,
-                    dy: -1,
-                    scale: 1.03
-                  },
-                  "front-right": { visible: true, flip: false, speech: "", anim: "idle", dx: -2, dy: 0, scale: 1 }
-                }
-              },
-              {
-                text: "",
-                mood: "warmth",
-                fireflyTarget: "front-right",
-                actors: {
-                  "left-back": { visible: true, flip: false, speech: "", anim: "sway", dx: 0, dy: 0, scale: 1 },
-                  "right-back": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "mid-center": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1.02 },
-                  "front-left": { visible: true, flip: false, speech: "", anim: "idle", dx: 4, dy: -1, scale: 1 },
-                  "front-right": {
-                    visible: true,
-                    flip: false,
-                    speech: "Это знак, что сам Дедушка Мороз уже ждёт нас на вершине холма у Главной Ёлки! Скорее в путь!",
-                    anim: "bow",
-                    dx: -5,
-                    dy: 0,
-                    scale: 1.02
-                  }
-                }
+          steps: [
+            {
+              text: 'В канун Нового года, когда часы ещё не пробили полночь, маленький Тимоша шагнул на заснеженную опушку древнего леса.',
+              mood: 'frost',
+              fireflyTarget: 'front-left',
+              actors: {
+                'left-back':   { visible: true,  flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'right-back':  { visible: true,  flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'mid-center':  { visible: true,  flip: false, speech: '', anim: 'idle', dx: 0, dy: 0, scale: 0.84 },
+                'front-left':  { visible: true,  flip: false, speech: '', anim: 'idle', dx: -4, dy: 1, scale: 1 },
+                'front-right': { visible: false, flip: false, speech: '', anim: 'idle', dx: 6, dy: 0, scale: 0.9 }
               }
-            ]
-          },
-          {
-            id: "spread-3",
-            title: "Глава III. Чудо Новогодней Полуночи",
-            layout: "layout-4",
-            backdropMask: "arch",
-            transitionImg: "transition-2.png",
-            slots: {
-              "bg": { img: "bg-scene3.png", speaker: "", custom: null },
-              "left-back": { img: "tree-left.png", speaker: "Хранительница Ель", custom: null },
-              "right-back": { img: "tree-right.png", speaker: "Рождественский Фонарь", custom: null },
-              "mid-center": { img: "christmas-tree.png", speaker: "Главная Новогодняя Ёлка", custom: null },
-              "front-left": { img: "hero.png", speaker: "Малыш Тимоша", custom: null },
-              "front-right": { img: "santa.png", speaker: "Дедушка Мороз", custom: null }
             },
-            steps: [
-              {
-                text: "На широкой снежной вершине холма, утопая в пушистых сугробах под всполохами северного сияния, возвышалась Главная Ёлка. Рядом с ней малыша встречал добрый Дедушка Мороз.",
-                mood: "frost",
-                fireflyTarget: "front-right",
-                actors: {
-                  "left-back": { visible: true, flip: false, speech: "", anim: "sway", dx: 0, dy: 0, scale: 1 },
-                  "right-back": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "mid-center": { visible: true, flip: false, speech: "", anim: "sway", dx: 0, dy: 0, scale: 1 },
-                  "front-left": { visible: true, flip: false, speech: "", anim: "idle", dx: -2, dy: 0, scale: 1 },
-                  "front-right": { visible: true, flip: false, speech: "", anim: "idle", dx: 2, dy: 0, scale: 1 }
-                }
-              },
-              {
-                text: "",
-                mood: "warmth",
-                fireflyTarget: "front-right",
-                actors: {
-                  "left-back": { visible: true, flip: false, speech: "", anim: "sway", dx: 0, dy: 0, scale: 1 },
-                  "right-back": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "mid-center": { visible: true, flip: false, speech: "", anim: "sway", dx: 0, dy: 0, scale: 1.04 },
-                  "front-left": { visible: true, flip: false, speech: "", anim: "idle", dx: 3, dy: 0, scale: 1 },
-                  "front-right": {
-                    visible: true,
-                    flip: false,
-                    speech: "Спасибо тебе за доброе сердце, Тимоша! Твой маленький фонарик помог звезде вернуться на самую верхушку ёлки!",
-                    anim: "talk",
-                    dx: -3,
-                    dy: 0,
-                    scale: 1.03
-                  }
-                }
-              },
-              {
-                text: "",
-                mood: "warmth",
-                fireflyTarget: "front-left",
-                actors: {
-                  "left-back": { visible: true, flip: false, speech: "", anim: "sway", dx: 0, dy: 0, scale: 1 },
-                  "right-back": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "mid-center": { visible: true, flip: false, speech: "", anim: "sway", dx: 0, dy: 0, scale: 1.05 },
-                  "front-left": {
-                    visible: true,
-                    flip: false,
-                    speech: "Ура! Как ярко засияли все гирлянды! Пусть у каждого-каждого в эту ночь сбудется самое заветное желание!",
-                    anim: "talk",
-                    dx: 5,
-                    dy: -1,
-                    scale: 1.04
-                  },
-                  "front-right": { visible: true, flip: false, speech: "", anim: "bow", dx: -3, dy: 0, scale: 1.02 }
-                }
-              },
-              {
-                text: "И в ту же секунду сотни золотых огней озарили заснеженные кроны, а над горами пролетела новогодняя звезда, разнося по миру тихую радость и волшебство наступающего года.",
-                mood: "warmth",
-                fireflyTarget: "mid-center",
-                actors: {
-                  "left-back": { visible: true, flip: false, speech: "", anim: "sway", dx: 0, dy: 0, scale: 1 },
-                  "right-back": { visible: true, flip: false, speech: "", anim: "idle", dx: 0, dy: 0, scale: 1 },
-                  "mid-center": { visible: true, flip: false, speech: "", anim: "float", dx: 0, dy: 0, scale: 1.06 },
-                  "front-left": { visible: true, flip: false, speech: "", anim: "idle", dx: 4, dy: 0, scale: 1.02 },
-                  "front-right": { visible: true, flip: false, speech: "", anim: "idle", dx: -4, dy: 0, scale: 1.02 }
-                }
+            {
+              text: '',
+              mood: 'frost',
+              fireflyTarget: 'front-left',
+              actors: {
+                'left-back':   { visible: true,  flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'right-back':  { visible: true,  flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'mid-center':  { visible: true,  flip: false, speech: '', anim: 'idle', dx: 0, dy: 0, scale: 0.84 },
+                'front-left':  { visible: true,  flip: false, speech: 'Огонёк в моём фонарике совсем крошечный... Как же Дедушка Мороз найдёт дорогу сквозь такую метель?', anim: 'talk', dx: 2, dy: 0, scale: 1.02 },
+                'front-right': { visible: true,  flip: false, speech: '', anim: 'idle', dx: 2, dy: 0, scale: 0.98 }
               }
-            ]
-          }
-        ]
-      };
-
-      let storyData = JSON.parse(JSON.stringify(INITIAL_STORY_STATE));
-      let currentSpreadIdx = 0;
-      let currentStepIdx = 0;
-      let isBookOpen = false;
-      let isStoryFinished = false;
-      let isTransitionRunning = false;
-      let isStepChoreographyRunning = false;
-      let stepRevealTimer = null;
-      let previousActorPositions = {};
-
-      const rootStyle = document.documentElement.style;
-      const viewportScaler = document.getElementById("viewportScaler");
-      const shadowboxStage = document.getElementById("shadowboxStage");
-      const sceneBackdropCard = document.getElementById("sceneBackdropCard");
-      const footprintsLayer = document.getElementById("footprintsLayer");
-      const shootingStar = document.getElementById("shootingStar");
-      const closedCoverCta = document.getElementById("closedCoverCta");
-      const openBookBtn = document.getElementById("openBookBtn");
-      const storyReaderPanel = document.getElementById("storyReaderPanel");
-      const narratorDrawer = document.getElementById("narratorDrawer");
-      const hudChapterTitle = document.getElementById("hudChapterTitle");
-      const hudMoodLabel = document.getElementById("hudMoodLabel");
-      const hudStepText = document.getElementById("hudStepText");
-      const hudProgressIndicator = document.getElementById("hudProgressIndicator");
-      const prevPageBtn = document.getElementById("prevPageBtn");
-      const nextPageBtn = document.getElementById("nextPageBtn");
-      const nextPageBtnLabel = document.getElementById("nextPageBtnLabel");
-      const chapterTransitionOverlay = document.getElementById("chapterTransitionOverlay");
-      const transitionBgPhoto = document.getElementById("transitionBgPhoto");
-      const storyFinaleOverlay = document.getElementById("storyFinaleOverlay");
-
-      /* Предзагрузка и декодирование текстур в память GPU */
-      const decodedImageCache = new Map();
-
-      function preloadAndDecodeAssets() {
-        const urls = new Set([
-          storyData.settings.roomTex,
-          storyData.settings.coverTex,
-          storyData.settings.paperTex
-        ]);
-
-        storyData.spreads.forEach((sp) => {
-          if (sp.transitionImg) urls.add(sp.transitionImg);
-          if (sp.slots && sp.slots.bg && sp.slots.bg.img) urls.add(sp.slots.bg.img);
-          SLOT_KEYS.forEach((k) => {
-            if (sp.slots && sp.slots[k] && sp.slots[k].img) urls.add(sp.slots[k].img);
-          });
-        });
-
-        urls.forEach((src) => {
-          if (!src || decodedImageCache.has(src)) return;
-          const img = new Image();
-          img.decoding = "async";
-          img.src = src;
-          if (typeof img.decode === "function") {
-            img.decode().catch(() => {});
-          }
-          decodedImageCache.set(src, img);
-        });
-      }
-
-      function updateResponsiveScale() {
-        const vh = window.innerHeight;
-        rootStyle.setProperty("--stage-h", vh + "px");
-        rootStyle.setProperty("--stage-w", "100vw");
-        viewportScaler.style.transform = "scale(1)";
-      }
-
-      window.addEventListener("resize", updateResponsiveScale);
-      updateResponsiveScale();
-
-      function applyBookSettings() {
-        const s = storyData.settings;
-        rootStyle.setProperty("--user-zoom", s.zoom);
-        rootStyle.setProperty("--pop-boost", s.popBoost);
-        rootStyle.setProperty("--cam-rot-x", s.camRotX + "deg");
-        rootStyle.setProperty("--cam-rot-z", s.camRotZ + "deg");
-        rootStyle.setProperty("--room-tex", `url('${s.roomTex}')`);
-        rootStyle.setProperty("--cover-tex", `url('${s.coverTex}')`);
-        rootStyle.setProperty("--paper-tex", `url('${s.paperTex}')`);
-        document.body.setAttribute("data-aura", s.aura || "gold");
-      }
-
-      function launchShootingStarOverMountains() {
-        if (!shootingStar) return;
-        shootingStar.classList.remove("is-streaking");
-        void shootingStar.offsetWidth;
-        shootingStar.classList.add("is-streaking");
-      }
-
-      function spawnFootprintsTrail(fromX, fromY, toX, toY) {
-        if (!footprintsLayer) return;
-        const dist = Math.hypot(toX - fromX, toY - fromY);
-        if (dist < 2.2) return;
-
-        const stepsCount = Math.min(7, Math.max(3, Math.round(dist / 2.2)));
-        const angleRad = Math.atan2(toY - fromY, toX - fromX);
-        const angleDeg = (angleRad * 180) / Math.PI;
-
-        for (let i = 1; i <= stepsCount; i++) {
-          const t = i / (stepsCount + 1);
-          const sideOffset = (i % 2 === 0 ? 1 : -1) * 1.1;
-          const px = fromX + (toX - fromX) * t - Math.sin(angleRad) * sideOffset;
-          const py = fromY + (toY - fromY) * t + Math.cos(angleRad) * sideOffset;
-
-          setTimeout(() => {
-            if (!footprintsLayer) return;
-            const fp = document.createElement("div");
-            fp.className = "marauder-footprint";
-            fp.style.left = px + "%";
-            fp.style.top = py + "%";
-            fp.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg)`;
-            footprintsLayer.appendChild(fp);
-            setTimeout(() => fp.remove(), 3450);
-          }, i * 240);
-        }
-      }
-
-      function getSlotResolvedGeometry(spread, slotKey) {
-        const presetLayout = LAYOUT_PRESETS[spread.layout] || LAYOUT_PRESETS["layout-1"];
-        const base = presetLayout[slotKey] || { x: 50, y: 70, w: 150, h: 220, scale: 1 };
-        const custom = spread.slots[slotKey] && spread.slots[slotKey].custom;
-        if (!custom) return { ...base };
-        return {
-          x: custom.x !== undefined ? custom.x : base.x,
-          y: custom.y !== undefined ? custom.y : base.y,
-          w: custom.w !== undefined ? custom.w : base.w,
-          h: custom.h !== undefined ? custom.h : base.h,
-          scale: custom.scale !== undefined ? custom.scale : base.scale
-        };
-      }
-
-      const guideFireflyTarget = { x: 210, y: 520 };
-
-      function updateFireflyTargetForSlot(slotKey) {
-        const slotEl = document.getElementById("slot-" + slotKey);
-        if (!slotEl || slotEl.classList.contains("is-hidden")) {
-          guideFireflyTarget.x = 210;
-          guideFireflyTarget.y = 510;
-          return;
-        }
-        const stageRect = shadowboxStage.getBoundingClientRect();
-        const tRect = slotEl.getBoundingClientRect();
-        if (stageRect.width > 0 && stageRect.height > 0) {
-          guideFireflyTarget.x = ((tRect.left + tRect.width * 0.5 - stageRect.left) / stageRect.width) * 420;
-          guideFireflyTarget.y = ((tRect.top + tRect.height * 0.78 - stageRect.top) / stageRect.height) * 740;
-        }
-      }
-
-      function renderActiveStep(options = {}) {
-        const {
-          animateFootprints = true,
-          stagedPacing = false,
-          initialOpenDelay = false
-        } = options;
-
-        if (stepRevealTimer) {
-          clearTimeout(stepRevealTimer);
-          stepRevealTimer = null;
-        }
-
-        const spread = storyData.spreads[currentSpreadIdx];
-        if (!spread) return;
-        const step = spread.steps[currentStepIdx] || spread.steps[0];
-        if (!step) return;
-
-        const bgSlot = spread.slots["bg"] || { img: "bg-scene1.png" };
-        sceneBackdropCard.style.backgroundImage = `url('${bgSlot.img}')`;
-        sceneBackdropCard.setAttribute("data-mask", spread.backdropMask || "arch");
-
-        const mood = step.mood || "frost";
-        shadowboxStage.setAttribute("data-mood", mood);
-
-        const romanChapter = ROMAN_NUMERALS[currentSpreadIdx] || (currentSpreadIdx + 1);
-        hudChapterTitle.textContent = spread.title || `Глава ${romanChapter}`;
-        hudMoodLabel.textContent = mood === "warmth" ? "Тёплое сияние" : "Зимнее безмолвие";
-        hudProgressIndicator.textContent = `Глава ${romanChapter} • ${currentStepIdx + 1} / ${spread.steps.length}`;
-
-        let anyCharacterSpeaking = false;
-        SLOT_KEYS.forEach((slotKey) => {
-          const act = (step.actors && step.actors[slotKey]) || { visible: true, speech: "" };
-          if (act.visible && act.speech && act.speech.trim().length > 0) {
-            anyCharacterSpeaking = true;
-          }
-        });
-
-        if (stagedPacing || initialOpenDelay) {
-          narratorDrawer.classList.add("is-hidden-for-dialogue");
-          SLOT_KEYS.forEach((slotKey) => {
-            const slotEl = document.getElementById("slot-" + slotKey);
-            if (!slotEl) return;
-            const bubbleEl = slotEl.querySelector(".standee-speech-bubble");
-            if (bubbleEl) bubbleEl.classList.remove("is-visible");
-          });
-        }
-
-        SLOT_KEYS.forEach((slotKey) => {
-          const slotEl = document.getElementById("slot-" + slotKey);
-          if (!slotEl) return;
-
-          const slotCfg = spread.slots[slotKey] || { img: "", speaker: "" };
-          const geom = getSlotResolvedGeometry(spread, slotKey);
-          const act = (step.actors && step.actors[slotKey]) || {
-            visible: true,
-            flip: false,
-            speech: "",
-            anim: "idle",
-            dx: 0,
-            dy: 0,
-            scale: 1
-          };
-
-          const imgEl = slotEl.querySelector(".standee-img");
-          if (imgEl && slotCfg.img && imgEl.getAttribute("src") !== slotCfg.img) {
-            imgEl.setAttribute("src", slotCfg.img);
-          }
-
-          const finalX = geom.x + (act.dx || 0);
-          const finalY = geom.y + (act.dy || 0);
-          const finalScale = (geom.scale || 1) * (act.scale || 1);
-
-          const prevPos = previousActorPositions[`${currentSpreadIdx}-${slotKey}`];
-          if (
-            animateFootprints &&
-            act.visible &&
-            prevPos &&
-            prevPos.visible &&
-            (slotKey === "front-left" || slotKey === "front-right")
-          ) {
-            spawnFootprintsTrail(prevPos.x, prevPos.y, finalX, finalY);
-          }
-          previousActorPositions[`${currentSpreadIdx}-${slotKey}`] = {
-            x: finalX,
-            y: finalY,
-            visible: !!act.visible
-          };
-
-          slotEl.style.left = finalX + "%";
-          slotEl.style.top = finalY + "%";
-          slotEl.style.width = geom.w + "px";
-          slotEl.style.height = geom.h + "px";
-
-          const zDepthMap = {
-            "left-back": -48,
-            "right-back": -44,
-            "mid-center": -32,
-            "front-left": 28,
-            "front-right": 34
-          };
-          const zVal = (zDepthMap[slotKey] || 0) * (storyData.settings.popBoost || 1);
-          slotEl.style.transform = `translate3d(-50%, -100%, ${zVal}px) scale(${finalScale})`;
-
-          slotEl.classList.toggle("is-hidden", !act.visible);
-          slotEl.classList.toggle("is-flipped", !!act.flip);
-
-          const artEl = slotEl.querySelector(".standee-art");
-          if (artEl) {
-            artEl.setAttribute("data-anim", act.anim || "idle");
-          }
-        });
-
-        const revealDelay = initialOpenDelay ? 1250 : stagedPacing ? 680 : 60;
-
-        if (stagedPacing || initialOpenDelay) {
-          isStepChoreographyRunning = true;
-          nextPageBtn.classList.add("is-pacing-wait");
-          prevPageBtn.classList.add("is-pacing-wait");
-        }
-
-        stepRevealTimer = setTimeout(() => {
-          hudStepText.textContent = step.text || "";
-
-          SLOT_KEYS.forEach((slotKey) => {
-            const slotEl = document.getElementById("slot-" + slotKey);
-            if (!slotEl) return;
-            const slotCfg = spread.slots[slotKey] || { img: "", speaker: "" };
-            const act = (step.actors && step.actors[slotKey]) || { visible: true, speech: "" };
-
-            const bubbleEl = slotEl.querySelector(".standee-speech-bubble");
-            const speakerTag = slotEl.querySelector(".speech-speaker-tag");
-            const speechContent = slotEl.querySelector(".speech-text-content");
-
-            if (bubbleEl && speakerTag && speechContent) {
-              const hasSpeech = act.visible && act.speech && act.speech.trim().length > 0;
-              if (hasSpeech) {
-                speakerTag.textContent = slotCfg.speaker || "";
-                speechContent.textContent = act.speech.trim();
-                bubbleEl.classList.add("is-visible");
-              } else {
-                bubbleEl.classList.remove("is-visible");
+            },
+            {
+              text: '',
+              mood: 'frost',
+              fireflyTarget: 'front-right',
+              actors: {
+                'left-back':   { visible: true,  flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'right-back':  { visible: true,  flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'mid-center':  { visible: true,  flip: false, speech: '', anim: 'idle', dx: 0, dy: 0, scale: 0.85 },
+                'front-left':  { visible: true,  flip: false, speech: '', anim: 'idle', dx: 2, dy: 0, scale: 1 },
+                'front-right': { visible: true,  flip: false, speech: 'Не робей, малыш! Видишь — золотая искра уже танцует у твоего шарфика? Она поведёт нас к тёплому привалу!', anim: 'talk', dx: -3, dy: 0, scale: 1.03 }
+              }
+            },
+            {
+              text: 'Путеводный огонёк ласково вспорхнул над сугробами, согревая морозный воздух, и друзья поспешили за ним по хрустящему снегу.',
+              mood: 'warmth',
+              fireflyTarget: 'mid-center',
+              actors: {
+                'left-back':   { visible: true,  flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'right-back':  { visible: true,  flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'mid-center':  { visible: true,  flip: false, speech: '', anim: 'idle', dx: 0, dy: 0, scale: 0.88 },
+                'front-left':  { visible: true,  flip: false, speech: '', anim: 'idle', dx: 8, dy: -2, scale: 0.98 },
+                'front-right': { visible: true,  flip: false, speech: '', anim: 'idle', dx: -7, dy: -2, scale: 0.98 }
               }
             }
-          });
+          ]
+        },
 
-          if (anyCharacterSpeaking || !(step.text && step.text.trim().length > 0)) {
-            narratorDrawer.classList.add("is-hidden-for-dialogue");
-          } else {
-            narratorDrawer.classList.remove("is-hidden-for-dialogue");
-          }
+        /* ---------------- ГЛАВА 2 ---------------- */
+        {
+          title: 'Глава II. Тёплый Привал',
+          layout: 'layout-2',
+          backdropMask: 'arch',
+          transitionImg: 'transition-1.png',
+          slots: {
+            'bg':          { img: 'bg-scene2.png',  speaker: '',             custom: null },
+            'left-back':   { img: 'tree-left.png',  speaker: 'Ель',          custom: null },
+            'right-back':  { img: 'tree-right.png', speaker: 'Сосна',        custom: null },
+            'mid-center':  { img: 'tavern.png',     speaker: 'Лесной Терем', custom: null },
+            'front-left':  { img: 'hero.png',       speaker: 'Тимоша',       custom: null },
+            'front-right': { img: 'snowman.png',    speaker: 'Снеговик',     custom: null }
+          },
+          steps: [
+            {
+              text: 'Тропинка вывела путников к резному лесному терему. Из его трубы вился ароматный дымок корицы и еловых шишек.',
+              mood: 'frost',
+              fireflyTarget: 'mid-center',
+              actors: {
+                'left-back':   { visible: true, flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'right-back':  { visible: true, flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'mid-center':  { visible: true, flip: false, speech: '', anim: 'idle', dx: 0, dy: 0, scale: 0.92 },
+                'front-left':  { visible: true, flip: false, speech: '', anim: 'idle', dx: -3, dy: 1, scale: 1 },
+                'front-right': { visible: true, flip: false, speech: '', anim: 'idle', dx: 3, dy: 1, scale: 1 }
+              }
+            },
+            {
+              text: '',
+              mood: 'warmth',
+              fireflyTarget: 'front-left',
+              actors: {
+                'left-back':   { visible: true, flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'right-back':  { visible: true, flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'mid-center':  { visible: true, flip: false, speech: '', anim: 'idle', dx: 0, dy: 0, scale: 0.94 },
+                'front-left':  { visible: true, flip: false, speech: 'Смотри, окошки засветились янтарным теплом! Даже снег вокруг стал золотым, как в самой доброй сказке!', anim: 'talk', dx: 3, dy: 0, scale: 1.02 },
+                'front-right': { visible: true, flip: false, speech: '', anim: 'idle', dx: 1, dy: 0, scale: 1 }
+              }
+            },
+            {
+              text: '',
+              mood: 'warmth',
+              fireflyTarget: 'front-right',
+              actors: {
+                'left-back':   { visible: true, flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'right-back':  { visible: true, flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'mid-center':  { visible: true, flip: false, speech: '', anim: 'idle', dx: 0, dy: 0, scale: 0.94 },
+                'front-left':  { visible: true, flip: false, speech: '', anim: 'idle', dx: 3, dy: 0, scale: 1 },
+                'front-right': { visible: true, flip: false, speech: 'А за этим пригорком начинается Главная Поляна! Слышишь хрустальный перезвон бубенцов?', anim: 'talk', dx: -4, dy: -1, scale: 1.03 }
+              }
+            }
+          ]
+        },
 
-          const targetSlot = step.fireflyTarget || "front-left";
-          updateFireflyTargetForSlot(targetSlot);
-
-          isStepChoreographyRunning = false;
-          nextPageBtn.classList.remove("is-pacing-wait");
-          prevPageBtn.classList.remove("is-pacing-wait");
-        }, revealDelay);
-
-        const isFirstSpread = currentSpreadIdx === 0;
-        const isFirstStep = currentStepIdx === 0;
-        prevPageBtn.disabled = isFirstSpread && isFirstStep;
-
-        const isLastSpread = currentSpreadIdx === storyData.spreads.length - 1;
-        const isLastStep = currentStepIdx === spread.steps.length - 1;
-        if (nextPageBtnLabel) {
-          nextPageBtnLabel.textContent = isLastSpread && isLastStep ? "Завершить сказку" : "Дальше";
+        /* ---------------- ГЛАВА 3 ---------------- */
+        {
+          title: 'Глава III. Сердце Нового Года',
+          layout: 'layout-4',
+          backdropMask: 'arch',
+          transitionImg: 'transition-2.png',
+          slots: {
+            'bg':          { img: 'bg-scene3.png',      speaker: '',               custom: null },
+            'left-back':   { img: 'tree-left.png',      speaker: 'Ель',            custom: null },
+            'right-back':  { img: 'tree-right.png',     speaker: 'Сосна',          custom: null },
+            'mid-center':  { img: 'christmas-tree.png', speaker: 'Новогодняя Ёлка', custom: null },
+            'front-left':  { img: 'hero.png',           speaker: 'Тимоша',         custom: null },
+            'front-right': { img: 'santa.png',          speaker: 'Дедушка Мороз',  custom: null }
+          },
+          steps: [
+            {
+              text: 'На заснеженной поляне под сиянием полярной звезды возвышалась пушистая красавица-ёлка, усыпанная игрушками и подарками.',
+              mood: 'frost',
+              fireflyTarget: 'mid-center',
+              actors: {
+                'left-back':   { visible: true,  flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'right-back':  { visible: true,  flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'mid-center':  { visible: true,  flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 0.98 },
+                'front-left':  { visible: true,  flip: false, speech: '', anim: 'idle', dx: -3, dy: 0, scale: 1 },
+                'front-right': { visible: false, flip: false, speech: '', anim: 'idle', dx: 6, dy: 0, scale: 0.95 }
+              }
+            },
+            {
+              text: '',
+              mood: 'warmth',
+              fireflyTarget: 'front-right',
+              actors: {
+                'left-back':   { visible: true, flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'right-back':  { visible: true, flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'mid-center':  { visible: true, flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'front-left':  { visible: true, flip: false, speech: '', anim: 'idle', dx: -1, dy: 0, scale: 1 },
+                'front-right': { visible: true, flip: false, speech: 'Здравствуй, добрый Тимоша! Твоё смелое сердечко и крошечный фонарик привели меня точно к полуночи!', anim: 'talk', dx: -2, dy: 0, scale: 1.03 }
+              }
+            },
+            {
+              text: '',
+              mood: 'warmth',
+              fireflyTarget: 'front-left',
+              actors: {
+                'left-back':   { visible: true, flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'right-back':  { visible: true, flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1 },
+                'mid-center':  { visible: true, flip: false, speech: '', anim: 'sway', dx: 0, dy: 0, scale: 1.02 },
+                'front-left':  { visible: true, flip: false, speech: 'Дедушка Мороз, зажги скорее главную звезду, чтобы свет этого чуда согрел каждый дом на земле!', anim: 'talk', dx: 3, dy: -1, scale: 1.02 },
+                'front-right': { visible: true, flip: false, speech: '', anim: 'idle', dx: -2, dy: 0, scale: 1.02 }
+              }
+            },
+            {
+              text: 'Волшебный посох коснулся сугроба, золотая искра взмыла к самой верхушке ели — и весь мир озарился счастливым новогодним светом!',
+              mood: 'warmth',
+              fireflyTarget: 'mid-center',
+              actors: {
+                'left-back':   { visible: true, flip: false, speech: '', anim: 'sway',  dx: 0, dy: 0, scale: 1 },
+                'right-back':  { visible: true, flip: false, speech: '', anim: 'sway',  dx: 0, dy: 0, scale: 1 },
+                'mid-center':  { visible: true, flip: false, speech: '', anim: 'float', dx: 0, dy: -1, scale: 1.04 },
+                'front-left':  { visible: true, flip: false, speech: '', anim: 'idle',  dx: 4, dy: -1, scale: 1 },
+                'front-right': { visible: true, flip: false, speech: '', anim: 'bow',   dx: -4, dy: -1, scale: 1.02 }
+              }
+            }
+          ]
         }
-      }
+      ]
+    };
 
-      function openShadowboxFairytale() {
-        if (isBookOpen || isStoryFinished || isTransitionRunning) return;
-        isBookOpen = true;
+    let storyData = JSON.parse(JSON.stringify(DEFAULT_STORY_DATA));
+    if (window.__EXPORTED_STORY_DATA__) {
+      storyData = JSON.parse(JSON.stringify(window.__EXPORTED_STORY_DATA__));
+    }
 
-        closedCoverCta.classList.add("is-hidden");
-        shadowboxStage.classList.add("is-open");
+    let isBoxOpen = false;
+    let isStoryFinishedPermanently = false;
+    let isTransitionPlaying = false;
+    let isSceneOccluded = false;
+    let currentSpreadIdx = 0;
+    let currentStepIdx = 0;
+    let stepRevealTimer = null;
+    let footprintTimers = [];
+    let previousActorCoords = {};
 
-        renderActiveStep({ animateFootprints: false, initialOpenDelay: true });
+    const stageEl = document.getElementById('shadowboxStage');
+    const worldEl = document.getElementById('stage3dWorld');
+    const nicheEl = document.getElementById('theaterNiche');
+    const backdropCardEl = document.getElementById('backdropCard');
+    const shootingStarEl = document.getElementById('shootingStar');
+    const footprintsLayerEl = document.getElementById('footprintsLayer');
+    const chapterPreludeVeilEl = document.getElementById('chapterPreludeVeil');
 
-        setTimeout(() => {
-          launchShootingStarOverMountains();
-        }, 650);
+    const closedCoverCtaEl = document.getElementById('closedCoverCta');
+    const openBookBtn = document.getElementById('openBookBtn');
+    const storyReaderPanel = document.getElementById('storyReaderPanel');
+    const narratorDrawerEl = document.getElementById('narratorDrawer');
+    const chapterBadgeTitleEl = document.getElementById('chapterBadgeTitle');
+    const chapterStepBadgeEl = document.getElementById('chapterStepBadge');
+    const narratorTextEl = document.getElementById('narratorText');
 
-        setTimeout(() => {
-          if (!isStoryFinished) {
-            storyReaderPanel.classList.add("is-active");
-          }
-        }, 1150);
-      }
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const nextBtnLabel = document.getElementById('nextBtnLabel');
+    const pageIndicator = document.getElementById('pageIndicator');
 
-      function playChapterTransition(targetSpreadIdx) {
-        if (isTransitionRunning || isStoryFinished) return;
-        isTransitionRunning = true;
+    const transitionOverlayEl = document.getElementById('chapterTransitionOverlay');
+    const transitionBgPhotoEl = document.getElementById('transitionBgPhoto');
+    const storyFinaleOverlayEl = document.getElementById('storyFinaleOverlay');
 
-        const targetSpread = storyData.spreads[targetSpreadIdx];
-        const transPhotoUrl = (targetSpread && targetSpread.transitionImg) || "transition-1.png";
-        transitionBgPhoto.style.backgroundImage = `url('${transPhotoUrl}')`;
+    const SLOT_KEYS = ['left-back', 'right-back', 'mid-center', 'front-left', 'front-right'];
+    const slotDomMap = {};
+    SLOT_KEYS.forEach(k => {
+      slotDomMap[k] = document.getElementById('slot-' + k);
+    });
 
-        narratorDrawer.classList.add("is-hidden-for-dialogue");
-        SLOT_KEYS.forEach((slotKey) => {
-          const slotEl = document.getElementById("slot-" + slotKey);
-          if (!slotEl) return;
-          const bubbleEl = slotEl.querySelector(".standee-speech-bubble");
-          if (bubbleEl) bubbleEl.classList.remove("is-visible");
+    /* Предзагрузка и декодирование текстур в память GPU */
+    function preloadAndDecodeAssets() {
+      const urls = new Set([
+        storyData.settings.roomTex,
+        storyData.settings.coverTex,
+        storyData.settings.paperTex,
+        'transition-1.png',
+        'transition-2.png'
+      ]);
+      storyData.spreads.forEach(sp => {
+        if (sp.transitionImg) urls.add(sp.transitionImg);
+        Object.values(sp.slots).forEach(s => {
+          if (s && s.img) urls.add(s.img);
         });
+      });
+      urls.forEach(url => {
+        if (!url) return;
+        const img = new Image();
+        img.src = url;
+        if (img.decode) img.decode().catch(() => {});
+      });
+    }
 
-        chapterTransitionOverlay.classList.remove("is-active");
-        void chapterTransitionOverlay.offsetWidth;
-        chapterTransitionOverlay.classList.add("is-active");
+    function applyGlobalBookSettings() {
+      const s = storyData.settings;
+      const root = document.documentElement;
+      root.style.setProperty('--user-zoom', s.zoom);
+      root.style.setProperty('--pop-boost', s.popBoost);
+      root.style.setProperty('--cam-rot-x', s.camRotX + 'deg');
+      root.style.setProperty('--cam-rot-z', s.camRotZ + 'deg');
+      root.style.setProperty('--room-tex', `url('${s.roomTex}')`);
+      root.style.setProperty('--cover-tex', `url('${s.coverTex}')`);
+      root.style.setProperty('--paper-tex', `url('${s.paperTex}')`);
+      document.body.setAttribute('data-aura', s.aura || 'gold');
+    }
 
-        setTimeout(() => {
-          currentSpreadIdx = targetSpreadIdx;
-          currentStepIdx = 0;
-          previousActorPositions = {};
-          footprintsLayer.innerHTML = "";
-          renderActiveStep({ animateFootprints: false, initialOpenDelay: true });
-          syncBuilderUI();
-        }, 2150);
+    function getSlotGeometry(spread, slotKey) {
+      const preset = LAYOUT_PRESETS[spread.layout] || LAYOUT_PRESETS['layout-1'];
+      const base = preset[slotKey] || { x: 50, y: 70, w: 150, h: 220, scale: 1 };
+      const slotCfg = spread.slots[slotKey];
+      if (slotCfg && slotCfg.custom) {
+        return {
+          x: slotCfg.custom.x ?? base.x,
+          y: slotCfg.custom.y ?? base.y,
+          w: slotCfg.custom.w ?? base.w,
+          h: slotCfg.custom.h ?? base.h,
+          scale: slotCfg.custom.scale ?? base.scale
+        };
+      }
+      return { ...base };
+    }
 
-        setTimeout(() => {
-          chapterTransitionOverlay.classList.remove("is-active");
-          launchShootingStarOverMountains();
+    function clearFootprintTimers() {
+      footprintTimers.forEach(t => clearTimeout(t));
+      footprintTimers = [];
+    }
+
+    function spawnMarauderFootprints(x1, y1, x2, y2) {
+      const dist = Math.hypot(x2 - x1, y2 - y1);
+      if (dist < 2.2) return;
+      const stepsCount = Math.min(7, Math.max(3, Math.floor(dist / 2.2)));
+
+      for (let i = 1; i <= stepsCount; i++) {
+        const timer = setTimeout(() => {
+          if (!footprintsLayerEl) return;
+          const t = i / (stepsCount + 1);
+          const sideOffset = (i % 2 === 0 ? 1.1 : -1.1);
+          const px = x1 + (x2 - x1) * t + sideOffset * 0.4;
+          const py = y1 + (y2 - y1) * t + (i % 2 === 0 ? 0.45 : -0.45);
+
+          const fp = document.createElement('div');
+          fp.className = 'marauder-footprint';
+          fp.style.left = `${px}%`;
+          fp.style.top = `${py}%`;
+          footprintsLayerEl.appendChild(fp);
+
           setTimeout(() => {
-            isTransitionRunning = false;
-          }, 950);
-        }, 3950);
+            if (fp.parentNode) fp.parentNode.removeChild(fp);
+          }, 3450);
+        }, i * 240);
+        footprintTimers.push(timer);
+      }
+    }
+
+    function launchShootingStarOverMountains() {
+      if (!shootingStarEl) return;
+      shootingStarEl.classList.remove('is-streaking');
+      void shootingStarEl.offsetWidth;
+      shootingStarEl.classList.add('is-streaking');
+    }
+
+    let activeFireflyTargetSlot = 'front-left';
+    let cachedFireflyTargetPos = { x: 180, y: 360 };
+
+    function updateCachedFireflyTarget(spread, step) {
+      if (!nicheEl) return;
+      const cw = nicheEl.clientWidth || 360;
+      const ch = nicheEl.clientHeight || 640;
+      const slotKey = activeFireflyTargetSlot || 'front-left';
+      const baseGeom = getSlotGeometry(spread, slotKey);
+      const actCfg = (step.actors && step.actors[slotKey]) || { dx: 0, dy: 0, scale: 1 };
+      const finalXPercent = baseGeom.x + (Number(actCfg.dx) || 0);
+      const finalYPercent = baseGeom.y + (Number(actCfg.dy) || 0);
+      const totalScale = (baseGeom.scale || 1) * (Number(actCfg.scale) || 1);
+
+      const approxStandeeH = baseGeom.h * totalScale * (ch / 680);
+      cachedFireflyTargetPos.x = (finalXPercent / 100) * cw;
+      cachedFireflyTargetPos.y = (finalYPercent / 100) * ch - approxStandeeH * 0.22;
+    }
+
+    /* Трёхтактная режиссура шага с аппаратным перемещением через translate3d */
+    function renderActiveStep(options = {}) {
+      const { isInitialOpen = false, resetFootprints = false, instantSilentSwap = false } = options;
+
+      if (stepRevealTimer) {
+        clearTimeout(stepRevealTimer);
+        stepRevealTimer = null;
+      }
+      clearFootprintTimers();
+
+      const spread = storyData.spreads[currentSpreadIdx];
+      if (!spread) return;
+      const step = spread.steps[currentStepIdx] || spread.steps[0];
+      if (!step) return;
+
+      if (resetFootprints && footprintsLayerEl) {
+        footprintsLayerEl.innerHTML = '';
+        previousActorCoords = {};
       }
 
-      function triggerStoryFinale() {
-        if (isStoryFinished || isTransitionRunning) return;
-        isStoryFinished = true;
-        isBookOpen = false;
-
-        storyReaderPanel.classList.remove("is-active");
-        closedCoverCta.classList.add("is-hidden");
-        SLOT_KEYS.forEach((slotKey) => {
-          const slotEl = document.getElementById("slot-" + slotKey);
-          if (!slotEl) return;
-          const bubbleEl = slotEl.querySelector(".standee-speech-bubble");
-          if (bubbleEl) bubbleEl.classList.remove("is-visible");
-        });
-
-        setTimeout(() => {
-          shadowboxStage.classList.remove("is-open");
-          shadowboxStage.classList.add("is-finished");
-        }, 420);
-
-        setTimeout(() => {
-          storyFinaleOverlay.classList.add("is-visible");
-          storyFinaleOverlay.setAttribute("aria-hidden", "false");
-        }, 2150);
+      if (instantSilentSwap && worldEl) {
+        worldEl.classList.add('is-instant-swap');
       }
 
-      function goNextStep() {
-        if (!isBookOpen || isStoryFinished || isTransitionRunning || isStepChoreographyRunning) return;
-        const spread = storyData.spreads[currentSpreadIdx];
-        if (!spread) return;
+      if (chapterBadgeTitleEl) {
+        chapterBadgeTitleEl.textContent = spread.title || `Глава ${currentSpreadIdx + 1}`;
+      }
+      if (chapterStepBadgeEl) {
+        chapterStepBadgeEl.textContent = `Шаг ${currentStepIdx + 1}/${spread.steps.length}`;
+      }
 
-        if (currentStepIdx < spread.steps.length - 1) {
-          currentStepIdx++;
-          if (currentStepIdx === spread.steps.length - 1) {
-            launchShootingStarOverMountains();
+      if (backdropCardEl) {
+        backdropCardEl.setAttribute('data-mask', spread.backdropMask || 'arch');
+        const bgFile = spread.slots['bg'] ? spread.slots['bg'].img : '';
+        backdropCardEl.style.backgroundImage = bgFile ? `url('${bgFile}')` : 'none';
+      }
+
+      stageEl.setAttribute('data-mood', step.mood || 'frost');
+
+      activeFireflyTargetSlot = step.fireflyTarget || 'front-left';
+      updateCachedFireflyTarget(spread, step);
+
+      /* Такт 1: прячем прошлые реплики и свиток автора */
+      narratorDrawerEl.classList.add('is-hidden-for-dialogue');
+      SLOT_KEYS.forEach(slotKey => {
+        const slotEl = slotDomMap[slotKey];
+        if (!slotEl) return;
+        const bubbleEl = slotEl.querySelector('.standee-speech-bubble');
+        if (bubbleEl) bubbleEl.classList.remove('is-visible');
+      });
+
+      /* Такт 2: плавно двигаем актёров через GPU translate3d и создаём следы */
+      let hasCharacterDialogue = false;
+      const pendingBubblesToShow = [];
+
+      SLOT_KEYS.forEach(slotKey => {
+        const slotEl = slotDomMap[slotKey];
+        if (!slotEl) return;
+
+        const slotCfg = spread.slots[slotKey] || { img: '', speaker: '' };
+        const baseGeom = getSlotGeometry(spread, slotKey);
+        const actCfg = (step.actors && step.actors[slotKey]) || {
+          visible: true, flip: false, speech: '', anim: 'idle', dx: 0, dy: 0, scale: 1
+        };
+
+        const imgEl = slotEl.querySelector('.standee-img');
+        if (imgEl) {
+          const currentSrc = imgEl.getAttribute('src');
+          if (currentSrc !== (slotCfg.img || '')) {
+            imgEl.setAttribute('src', slotCfg.img || '');
           }
-          renderActiveStep({ animateFootprints: true, stagedPacing: true });
-          syncBuilderUI();
-        } else if (currentSpreadIdx < storyData.spreads.length - 1) {
-          playChapterTransition(currentSpreadIdx + 1);
+        }
+
+        const dxNum = Number(actCfg.dx || 0);
+        const dyNum = Number(actCfg.dy || 0);
+        const finalX = baseGeom.x + dxNum;
+        const finalY = baseGeom.y + dyNum;
+        const totalScale = (baseGeom.scale || 1) * Number(actCfg.scale || 1);
+
+        const prevPos = previousActorCoords[slotKey];
+        if (!isInitialOpen && !resetFootprints && !instantSilentSwap && prevPos && prevPos.visible && actCfg.visible) {
+          if (Math.hypot(finalX - prevPos.x, finalY - prevPos.y) >= 2.2) {
+            spawnMarauderFootprints(prevPos.x, prevPos.y, finalX, finalY);
+          }
+        }
+        previousActorCoords[slotKey] = { x: finalX, y: finalY, visible: !!actCfg.visible };
+
+        /* Статичные базовые координаты слота */
+        slotEl.style.left = `${baseGeom.x}%`;
+        slotEl.style.top = `${baseGeom.y}%`;
+        slotEl.style.width = `${baseGeom.w}px`;
+        slotEl.style.height = `${baseGeom.h}px`;
+
+        /* Пошаговое смещение полностью внутри аппаратного translate3d */
+        const dxPx = (dxNum / 100) * STAGE_REF_W;
+        const dyPx = (dyNum / 100) * STAGE_REF_H;
+        slotEl.style.transform = `translate3d(calc(-50% + ${dxPx.toFixed(1)}px), calc(-100% + ${dyPx.toFixed(1)}px), calc(var(--slot-z, 0px) * var(--pop-boost))) scale(${totalScale.toFixed(3)})`;
+
+        slotEl.classList.toggle('is-hidden', !actCfg.visible);
+        slotEl.classList.toggle('is-flipped', !!actCfg.flip);
+
+        const artEl = slotEl.querySelector('.standee-art');
+        if (artEl) {
+          artEl.setAttribute('data-anim', actCfg.anim || 'idle');
+        }
+
+        const bubbleEl = slotEl.querySelector('.standee-speech-bubble');
+        const speakerTagEl = slotEl.querySelector('.speech-speaker-tag');
+        const speechTextEl = slotEl.querySelector('.speech-text-content');
+
+        const speechText = (actCfg.speech || '').trim();
+        if (actCfg.visible && speechText.length > 0 && bubbleEl) {
+          hasCharacterDialogue = true;
+          if (speakerTagEl) speakerTagEl.textContent = slotCfg.speaker || 'Герой';
+          if (speechTextEl) speechTextEl.textContent = speechText;
+          pendingBubblesToShow.push(bubbleEl);
+        }
+      });
+
+      if (instantSilentSwap) {
+        if (worldEl) {
+          void worldEl.offsetHeight;
+          worldEl.classList.remove('is-instant-swap');
+        }
+        updateReaderNavigationUI();
+        return;
+      }
+
+      /* Такт 3: после паузы проявляем либо облачко реплики героя, либо свиток автора */
+      const revealDelay = isInitialOpen ? 1250 : 680;
+      stepRevealTimer = setTimeout(() => {
+        if (!isBoxOpen || isStoryFinishedPermanently || isTransitionPlaying) return;
+
+        if (hasCharacterDialogue) {
+          narratorDrawerEl.classList.add('is-hidden-for-dialogue');
+          pendingBubblesToShow.forEach(b => b.classList.add('is-visible'));
         } else {
-          triggerStoryFinale();
+          const authorText = (step.text || '').trim();
+          if (authorText.length > 0) {
+            narratorTextEl.textContent = authorText;
+            narratorDrawerEl.classList.remove('is-hidden-for-dialogue');
+          }
         }
+      }, revealDelay);
+
+      updateReaderNavigationUI();
+      syncBuilderSelectsAndInputs();
+    }
+
+    function updateReaderNavigationUI() {
+      const totalSpreads = storyData.spreads.length;
+      const spread = storyData.spreads[currentSpreadIdx];
+      const totalSteps = spread ? spread.steps.length : 1;
+
+      if (pageIndicator) {
+        pageIndicator.textContent = `Глава ${currentSpreadIdx + 1}/${totalSpreads} • Шаг ${currentStepIdx + 1}/${totalSteps}`;
       }
 
-      function goPrevStep() {
-        if (!isBookOpen || isStoryFinished || isTransitionRunning || isStepChoreographyRunning) return;
-        if (currentStepIdx > 0) {
-          currentStepIdx--;
-          renderActiveStep({ animateFootprints: true, stagedPacing: true });
-          syncBuilderUI();
-        } else if (currentSpreadIdx > 0) {
-          const prevIdx = currentSpreadIdx - 1;
-          playChapterTransition(prevIdx);
+      const isVeryFirst = (currentSpreadIdx === 0 && currentStepIdx === 0);
+      const isVeryLast = (currentSpreadIdx === totalSpreads - 1 && currentStepIdx === totalSteps - 1);
+
+      if (prevPageBtn) prevPageBtn.disabled = isVeryFirst || isTransitionPlaying;
+      if (nextPageBtn) nextPageBtn.disabled = isTransitionPlaying;
+
+      if (nextBtnLabel) {
+        if (isVeryLast) {
+          nextBtnLabel.textContent = 'Финал';
+        } else if (currentStepIdx === totalSteps - 1) {
+          nextBtnLabel.textContent = 'Глава →';
+        } else {
+          nextBtnLabel.textContent = 'Дальше';
         }
       }
+    }
 
-      openBookBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
+    function openShadowboxFairytale() {
+      if (isBoxOpen || isStoryFinishedPermanently) return;
+      isBoxOpen = true;
+      currentSpreadIdx = 0;
+      currentStepIdx = 0;
+
+      stageEl.classList.add('is-open');
+      closedCoverCtaEl.classList.add('is-hidden');
+      storyReaderPanel.classList.add('is-active');
+
+      renderActiveStep({ isInitialOpen: true, resetFootprints: true });
+
+      setTimeout(() => {
+        launchShootingStarOverMountains();
+      }, 950);
+    }
+
+    function triggerPermanentStoryFinale() {
+      if (isStoryFinishedPermanently) return;
+      isStoryFinishedPermanently = true;
+      isBoxOpen = false;
+
+      if (stepRevealTimer) {
+        clearTimeout(stepRevealTimer);
+        stepRevealTimer = null;
+      }
+
+      narratorDrawerEl.classList.add('is-hidden-for-dialogue');
+      SLOT_KEYS.forEach(k => {
+        const b = slotDomMap[k]?.querySelector('.standee-speech-bubble');
+        if (b) b.classList.remove('is-visible');
+      });
+      storyReaderPanel.classList.remove('is-active');
+      closedCoverCtaEl.classList.add('is-hidden');
+
+      stageEl.classList.remove('is-open');
+      stageEl.classList.add('is-finished');
+
+      setTimeout(() => {
+        storyFinaleOverlayEl.classList.add('is-visible');
+      }, 1550);
+    }
+
+    /* Плавный вход в экран межглавового перехода + 60 FPS рисование снежинки */
+    function playChapterSnowflakeTransition(targetSpreadIdx, targetStepIdx) {
+      if (isTransitionPlaying) return;
+      isTransitionPlaying = true;
+      updateReaderNavigationUI();
+
+      if (stepRevealTimer) {
+        clearTimeout(stepRevealTimer);
+        stepRevealTimer = null;
+      }
+
+      /* 1. Мягкое предвкушение: гасим реплики и окутываем сцену сумеречной золотистой дымкой */
+      narratorDrawerEl.classList.add('is-hidden-for-dialogue');
+      SLOT_KEYS.forEach(k => {
+        const b = slotDomMap[k]?.querySelector('.standee-speech-bubble');
+        if (b) b.classList.remove('is-visible');
+      });
+      if (chapterPreludeVeilEl) {
+        chapterPreludeVeilEl.classList.add('is-active');
+      }
+
+      const targetSpread = storyData.spreads[targetSpreadIdx];
+      const transImg = (targetSpread && targetSpread.transitionImg)
+        ? targetSpread.transitionImg
+        : (targetSpreadIdx === 1 ? 'transition-1.png' : 'transition-2.png');
+
+      transitionBgPhotoEl.style.backgroundImage = `url('${transImg}')`;
+
+      /* 2. Через 420 мс, когда сцена мягко затихла в дымке, плавно проявляем переходный экран */
+      setTimeout(() => {
+        transitionOverlayEl.classList.remove('is-fading-out', 'is-active');
+        void transitionOverlayEl.offsetWidth;
+        transitionOverlayEl.classList.add('is-active');
+      }, 420);
+
+      /* 3. Когда переходный экран полностью закрыл сцену (1580 мс) — ставим сцену на паузу и мгновенно меняем главу */
+      setTimeout(() => {
+        isSceneOccluded = true;
+        stageEl.classList.add('is-occluded');
+        if (chapterPreludeVeilEl) {
+          chapterPreludeVeilEl.classList.remove('is-active');
+        }
+        currentSpreadIdx = targetSpreadIdx;
+        currentStepIdx = targetStepIdx;
+        renderActiveStep({ resetFootprints: true, instantSilentSwap: true });
+      }, 1580);
+
+      /* 4. Когда снежинка полностью расцвела (4250 мс) — снимаем паузу и плавно растворяем экран перехода */
+      setTimeout(() => {
+        isSceneOccluded = false;
+        stageEl.classList.remove('is-occluded');
+        transitionOverlayEl.classList.add('is-fading-out');
+        transitionOverlayEl.classList.remove('is-active');
+
+        const spread = storyData.spreads[currentSpreadIdx];
+        const step = spread && spread.steps[currentStepIdx];
+        if (step) {
+          let hasDialogue = false;
+          SLOT_KEYS.forEach(slotKey => {
+            const actCfg = step.actors && step.actors[slotKey];
+            const bubbleEl = slotDomMap[slotKey]?.querySelector('.standee-speech-bubble');
+            if (actCfg && actCfg.visible && (actCfg.speech || '').trim().length > 0 && bubbleEl) {
+              hasDialogue = true;
+              setTimeout(() => bubbleEl.classList.add('is-visible'), 620);
+            }
+          });
+          if (!hasDialogue && (step.text || '').trim().length > 0) {
+            narratorTextEl.textContent = step.text.trim();
+            setTimeout(() => {
+              narratorDrawerEl.classList.remove('is-hidden-for-dialogue');
+            }, 620);
+          }
+        }
+      }, 4250);
+
+      /* 5. Очистка после завершения растворения */
+      setTimeout(() => {
+        transitionOverlayEl.classList.remove('is-fading-out');
+        isTransitionPlaying = false;
+        updateReaderNavigationUI();
+        syncBuilderSelectsAndInputs();
+      }, 5450);
+    }
+
+    function goToNextStep() {
+      if (!isBoxOpen || isTransitionPlaying || isStoryFinishedPermanently) return;
+      const spread = storyData.spreads[currentSpreadIdx];
+      if (!spread) return;
+
+      if (currentStepIdx < spread.steps.length - 1) {
+        currentStepIdx++;
+        renderActiveStep();
+      } else if (currentSpreadIdx < storyData.spreads.length - 1) {
+        playChapterSnowflakeTransition(currentSpreadIdx + 1, 0);
+      } else {
+        triggerPermanentStoryFinale();
+      }
+    }
+
+    function goToPrevStep() {
+      if (!isBoxOpen || isTransitionPlaying || isStoryFinishedPermanently) return;
+      if (currentStepIdx > 0) {
+        currentStepIdx--;
+        renderActiveStep();
+      } else if (currentSpreadIdx > 0) {
+        const prevSpreadIdx = currentSpreadIdx - 1;
+        const prevLastStep = storyData.spreads[prevSpreadIdx].steps.length - 1;
+        playChapterSnowflakeTransition(prevSpreadIdx, prevLastStep);
+      }
+    }
+
+    stageEl.addEventListener('click', () => {
+      if (!isBoxOpen && !isStoryFinishedPermanently) {
         openShadowboxFairytale();
-      });
+      }
+    });
+    openBookBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openShadowboxFairytale();
+    });
+    nextPageBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      goToNextStep();
+    });
+    prevPageBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      goToPrevStep();
+    });
 
-      shadowboxStage.addEventListener("click", () => {
-        if (!isBookOpen && !isStoryFinished) {
-          openShadowboxFairytale();
+    /* Оптимизированный Canvas (Offscreen-спрайты для снега и огонька без аллокаций в RAF) */
+    function initMagicCanvasEngine() {
+      const canvas = document.getElementById('fxCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d', { alpha: true });
+
+      let cw = 360;
+      let ch = 640;
+
+      function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        cw = Math.max(1, Math.round(rect.width));
+        ch = Math.max(1, Math.round(rect.height));
+        canvas.width = cw;
+        canvas.height = ch;
+
+        const spread = storyData.spreads[currentSpreadIdx];
+        const step = spread && spread.steps[currentStepIdx];
+        if (spread && step) {
+          updateCachedFireflyTarget(spread, step);
         }
-      });
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
 
-      nextPageBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        goNextStep();
-      });
+      const snowSprite = document.createElement('canvas');
+      snowSprite.width = 32;
+      snowSprite.height = 32;
+      const sCtx = snowSprite.getContext('2d');
+      const sGrad = sCtx.createRadialGradient(16, 16, 0, 16, 16, 15);
+      sGrad.addColorStop(0, 'rgba(255, 255, 255, 0.98)');
+      sGrad.addColorStop(0.45, 'rgba(225, 240, 255, 0.55)');
+      sGrad.addColorStop(1, 'rgba(215, 235, 255, 0)');
+      sCtx.fillStyle = sGrad;
+      sCtx.beginPath();
+      sCtx.arc(16, 16, 15, 0, Math.PI * 2);
+      sCtx.fill();
 
-      prevPageBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        goPrevStep();
-      });
+      const fireflySprite = document.createElement('canvas');
+      fireflySprite.width = 64;
+      fireflySprite.height = 64;
+      const fCtx = fireflySprite.getContext('2d');
+      const fGrad = fCtx.createRadialGradient(32, 32, 0, 32, 32, 30);
+      fGrad.addColorStop(0, 'rgba(255, 253, 230, 1)');
+      fGrad.addColorStop(0.24, 'rgba(255, 215, 105, 0.85)');
+      fGrad.addColorStop(0.58, 'rgba(255, 160, 45, 0.28)');
+      fGrad.addColorStop(1, 'rgba(255, 140, 30, 0)');
+      fCtx.fillStyle = fGrad;
+      fCtx.beginPath();
+      fCtx.arc(32, 32, 30, 0, Math.PI * 2);
+      fCtx.fill();
 
-      /* Canvas: Снег и низкий Золотой Огонёк-Проводник */
-      const fxCanvas = document.getElementById("fxCanvas");
-      const ctx = fxCanvas.getContext("2d");
+      const SNOW_COUNT = 54;
+      const snowflakes = [];
+      for (let i = 0; i < SNOW_COUNT; i++) {
+        const isForeground = i < 16;
+        snowflakes.push({
+          x: Math.random() * cw,
+          y: Math.random() * ch,
+          r: isForeground ? (2.2 + Math.random() * 1.9) : (0.9 + Math.random() * 1.3),
+          vy: isForeground ? (0.45 + Math.random() * 0.45) : (0.22 + Math.random() * 0.28),
+          vx: -0.15 + Math.random() * 0.3,
+          swingPhase: Math.random() * Math.PI * 2,
+          swingSpeed: 0.012 + Math.random() * 0.016,
+          alpha: isForeground ? (0.55 + Math.random() * 0.35) : (0.25 + Math.random() * 0.35)
+        });
+      }
 
-      const snowflakes = Array.from({ length: 58 }, () => ({
-        x: Math.random() * 420,
-        y: Math.random() * 740,
-        r: 1.1 + Math.random() * 2.4,
-        vy: 0.32 + Math.random() * 0.65,
-        vx: -0.18 + Math.random() * 0.36,
-        phase: Math.random() * Math.PI * 2
-      }));
-
-      const guideFirefly = {
-        x: 210,
-        y: 520,
+      const firefly = {
+        x: cw * 0.3,
+        y: ch * 0.65,
+        tx: cw * 0.3,
+        ty: ch * 0.65,
+        phase: 0,
         trail: []
       };
 
-      function renderAtmosphereLoop(now) {
-        if (!isTransitionRunning) {
-          ctx.clearRect(0, 0, 420, 740);
-
-          const isWarm = shadowboxStage.getAttribute("data-mood") === "warmth";
-
-          for (let i = 0; i < snowflakes.length; i++) {
-            const f = snowflakes[i];
-            f.y += f.vy;
-            f.x += f.vx + Math.sin(now * 0.0011 + f.phase) * 0.22;
-
-            if (f.y > 745) {
-              f.y = -6;
-              f.x = Math.random() * 420;
-            }
-            if (f.x < -6) f.x = 426;
-            if (f.x > 426) f.x = -6;
-
-            ctx.beginPath();
-            ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-            ctx.fillStyle = isWarm
-              ? "rgba(255, 246, 224, 0.78)"
-              : "rgba(232, 244, 255, 0.76)";
-            ctx.fill();
-          }
-
-          const hoverX = guideFireflyTarget.x + Math.cos(now * 0.0022) * 11;
-          const hoverY = guideFireflyTarget.y + Math.sin(now * 0.0031) * 7;
-
-          guideFirefly.x += (hoverX - guideFirefly.x) * 0.032;
-          guideFirefly.y += (hoverY - guideFirefly.y) * 0.032;
-
-          guideFirefly.trail.push({ x: guideFirefly.x, y: guideFirefly.y });
-          if (guideFirefly.trail.length > 16) guideFirefly.trail.shift();
-
-          for (let i = 0; i < guideFirefly.trail.length; i++) {
-            const pt = guideFirefly.trail[i];
-            const ratio = (i + 1) / guideFirefly.trail.length;
-            ctx.beginPath();
-            ctx.arc(pt.x, pt.y, ratio * 3.4, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 214, 108, ${ratio * 0.36})`;
-            ctx.fill();
-          }
-
-          const glowGrad = ctx.createRadialGradient(
-            guideFirefly.x,
-            guideFirefly.y,
-            1,
-            guideFirefly.x,
-            guideFirefly.y,
-            20
-          );
-          glowGrad.addColorStop(0, "rgba(255, 255, 240, 0.98)");
-          glowGrad.addColorStop(0.35, "rgba(255, 215, 102, 0.68)");
-          glowGrad.addColorStop(1, "rgba(255, 180, 62, 0)");
-
-          ctx.beginPath();
-          ctx.arc(guideFirefly.x, guideFirefly.y, 20, 0, Math.PI * 2);
-          ctx.fillStyle = glowGrad;
-          ctx.fill();
+      function renderLoop() {
+        if (isSceneOccluded) {
+          requestAnimationFrame(renderLoop);
+          return;
         }
 
-        requestAnimationFrame(renderAtmosphereLoop);
+        ctx.clearRect(0, 0, cw, ch);
+
+        for (let i = 0; i < SNOW_COUNT; i++) {
+          const f = snowflakes[i];
+          f.swingPhase += f.swingSpeed;
+          f.x += f.vx + Math.sin(f.swingPhase) * 0.24;
+          f.y += f.vy;
+
+          if (f.y > ch + 8) {
+            f.y = -8;
+            f.x = Math.random() * cw;
+          }
+          if (f.x < -8) f.x = cw + 8;
+          if (f.x > cw + 8) f.x = -8;
+
+          const drawSize = f.r * 3.8;
+          ctx.globalAlpha = f.alpha;
+          ctx.drawImage(snowSprite, f.x - drawSize * 0.5, f.y - drawSize * 0.5, drawSize, drawSize);
+        }
+
+        if (isBoxOpen && !isStoryFinishedPermanently) {
+          firefly.phase += 0.036;
+          firefly.tx = cachedFireflyTargetPos.x + Math.cos(firefly.phase * 1.3) * 14;
+          firefly.ty = cachedFireflyTargetPos.y + Math.sin(firefly.phase * 1.9) * 9;
+
+          firefly.x += (firefly.tx - firefly.x) * 0.032;
+          firefly.y += (firefly.ty - firefly.y) * 0.032;
+
+          firefly.trail.push({ x: firefly.x, y: firefly.y, life: 1.0 });
+          if (firefly.trail.length > 14) firefly.trail.shift();
+
+          for (let i = 0; i < firefly.trail.length; i++) {
+            const pt = firefly.trail[i];
+            pt.life -= 0.068;
+            if (pt.life > 0) {
+              const sz = 18 * pt.life;
+              ctx.globalAlpha = pt.life * 0.48;
+              ctx.drawImage(fireflySprite, pt.x - sz * 0.5, pt.y - sz * 0.5, sz, sz);
+            }
+          }
+
+          const pulseSize = 44 + Math.sin(firefly.phase * 2.4) * 6;
+          ctx.globalAlpha = 0.96;
+          ctx.drawImage(fireflySprite, firefly.x - pulseSize * 0.5, firefly.y - pulseSize * 0.5, pulseSize, pulseSize);
+        }
+
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(renderLoop);
       }
 
-      requestAnimationFrame(renderAtmosphereLoop);
+      requestAnimationFrame(renderLoop);
+    }
 
-      /* Логика 3-вкладочного конструктора */
-      const builderToggleBtn = document.getElementById("builderToggleBtn");
-      const builderDrawer = document.getElementById("builderDrawer");
-      const builderCloseBtn = document.getElementById("builderCloseBtn");
+    /* Логика 3-вкладочного конструктора и чистого экспорта */
+    const builderToggleBtn = document.getElementById('builderToggleBtn');
+    const builderCloseBtn = document.getElementById('builderCloseBtn');
+    const builderDrawer = document.getElementById('builderDrawer');
 
-      const bZoomSlider = document.getElementById("bZoomSlider");
-      const bPopBoostSlider = document.getElementById("bPopBoostSlider");
-      const bCamRotXSlider = document.getElementById("bCamRotXSlider");
-      const bCamRotZSlider = document.getElementById("bCamRotZSlider");
-      const bAuraSelect = document.getElementById("bAuraSelect");
-      const bRoomTexInput = document.getElementById("bRoomTexInput");
-      const bCoverTexInput = document.getElementById("bCoverTexInput");
-      const bPaperTexInput = document.getElementById("bPaperTexInput");
+    const bZoomSlider = document.getElementById('bZoomSlider');
+    const bPopBoostSlider = document.getElementById('bPopBoostSlider');
+    const bCamRotXSlider = document.getElementById('bCamRotXSlider');
+    const bCamRotZSlider = document.getElementById('bCamRotZSlider');
+    const bAuraSelect = document.getElementById('bAuraSelect');
+    const bRoomTexInput = document.getElementById('bRoomTexInput');
+    const bCoverTexInput = document.getElementById('bCoverTexInput');
+    const bPaperTexInput = document.getElementById('bPaperTexInput');
 
-      const bSpreadSelect = document.getElementById("bSpreadSelect");
-      const bAddSpreadBtn = document.getElementById("bAddSpreadBtn");
-      const bDelSpreadBtn = document.getElementById("bDelSpreadBtn");
-      const bSpreadTitle = document.getElementById("bSpreadTitle");
-      const bTransitionImgInput = document.getElementById("bTransitionImgInput");
-      const bLayoutSelect = document.getElementById("bLayoutSelect");
-      const bBackdropMaskSelect = document.getElementById("bBackdropMaskSelect");
+    const bSpreadSelect = document.getElementById('bSpreadSelect');
+    const bAddSpreadBtn = document.getElementById('bAddSpreadBtn');
+    const bDelSpreadBtn = document.getElementById('bDelSpreadBtn');
+    const bSpreadTitle = document.getElementById('bSpreadTitle');
+    const bTransitionImgInput = document.getElementById('bTransitionImgInput');
+    const bLayoutSelect = document.getElementById('bLayoutSelect');
+    const bBackdropMaskSelect = document.getElementById('bBackdropMaskSelect');
+    const bSlotSelect = document.getElementById('bSlotSelect');
+    const bSlotImg = document.getElementById('bSlotImg');
+    const bSlotSpeakerName = document.getElementById('bSlotSpeakerName');
+    const bSwapTargetSelect = document.getElementById('bSwapTargetSelect');
+    const bSwapBtn = document.getElementById('bSwapBtn');
+    const bSlotXInput = document.getElementById('bSlotXInput');
+    const bSlotYInput = document.getElementById('bSlotYInput');
+    const bSlotWInput = document.getElementById('bSlotWInput');
+    const bSlotHInput = document.getElementById('bSlotHInput');
+    const bSlotScaleInput = document.getElementById('bSlotScaleInput');
+    const bResetSlotCustomBtn = document.getElementById('bResetSlotCustomBtn');
 
-      const bSlotSelect = document.getElementById("bSlotSelect");
-      const bSlotImg = document.getElementById("bSlotImg");
-      const bSlotSpeakerName = document.getElementById("bSlotSpeakerName");
-      const bSwapTargetSelect = document.getElementById("bSwapTargetSelect");
-      const bSwapBtn = document.getElementById("bSwapBtn");
-      const bSlotScaleInput = document.getElementById("bSlotScaleInput");
-      const bSlotXInput = document.getElementById("bSlotXInput");
-      const bSlotYInput = document.getElementById("bSlotYInput");
-      const bSlotWInput = document.getElementById("bSlotWInput");
-      const bSlotHInput = document.getElementById("bSlotHInput");
-      const bResetSlotCustomBtn = document.getElementById("bResetSlotCustomBtn");
+    const bStepSelect = document.getElementById('bStepSelect');
+    const bAddStepBtn = document.getElementById('bAddStepBtn');
+    const bDelStepBtn = document.getElementById('bDelStepBtn');
+    const bStepText = document.getElementById('bStepText');
+    const bStepMoodSelect = document.getElementById('bStepMoodSelect');
+    const bStepFireflySelect = document.getElementById('bStepFireflySelect');
+    const bActorSlotSelect = document.getElementById('bActorSlotSelect');
+    const bActorVisible = document.getElementById('bActorVisible');
+    const bActorFlip = document.getElementById('bActorFlip');
+    const bActorSpeech = document.getElementById('bActorSpeech');
+    const bActorAnim = document.getElementById('bActorAnim');
+    const bActorDx = document.getElementById('bActorDx');
+    const bActorDy = document.getElementById('bActorDy');
+    const bActorScale = document.getElementById('bActorScale');
+    const exportHtmlBtn = document.getElementById('exportHtmlBtn');
 
-      const bStepSelect = document.getElementById("bStepSelect");
-      const bAddStepBtn = document.getElementById("bAddStepBtn");
-      const bDelStepBtn = document.getElementById("bDelStepBtn");
-      const bStepText = document.getElementById("bStepText");
-      const bStepMoodSelect = document.getElementById("bStepMoodSelect");
-      const bStepFireflySelect = document.getElementById("bStepFireflySelect");
+    function syncBuilderSelectsAndInputs() {
+      if (!builderDrawer) return;
 
-      const bActorSlotSelect = document.getElementById("bActorSlotSelect");
-      const bActorVisible = document.getElementById("bActorVisible");
-      const bActorFlip = document.getElementById("bActorFlip");
-      const bActorSpeech = document.getElementById("bActorSpeech");
-      const bActorAnim = document.getElementById("bActorAnim");
-      const bActorDx = document.getElementById("bActorDx");
-      const bActorDy = document.getElementById("bActorDy");
-      const bActorScale = document.getElementById("bActorScale");
-      const exportHtmlBtn = document.getElementById("exportHtmlBtn");
+      if (bZoomSlider) bZoomSlider.value = storyData.settings.zoom;
+      if (bPopBoostSlider) bPopBoostSlider.value = storyData.settings.popBoost;
+      if (bCamRotXSlider) bCamRotXSlider.value = storyData.settings.camRotX;
+      if (bCamRotZSlider) bCamRotZSlider.value = storyData.settings.camRotZ;
+      if (bAuraSelect) bAuraSelect.value = storyData.settings.aura;
+      if (bRoomTexInput) bRoomTexInput.value = storyData.settings.roomTex;
+      if (bCoverTexInput) bCoverTexInput.value = storyData.settings.coverTex;
+      if (bPaperTexInput) bPaperTexInput.value = storyData.settings.paperTex;
 
-      function syncBuilderUI() {
-        if (!builderDrawer) return;
-        const s = storyData.settings;
-        bZoomSlider.value = s.zoom;
-        bPopBoostSlider.value = s.popBoost;
-        bCamRotXSlider.value = s.camRotX;
-        bCamRotZSlider.value = s.camRotZ;
-        bAuraSelect.value = s.aura;
-        bRoomTexInput.value = s.roomTex;
-        bCoverTexInput.value = s.coverTex;
-        bPaperTexInput.value = s.paperTex;
-
-        document.getElementById("valZoom").textContent = Number(s.zoom).toFixed(2);
-        document.getElementById("valPop").textContent = Number(s.popBoost).toFixed(2);
-        document.getElementById("valRotX").textContent = s.camRotX + "°";
-        document.getElementById("valRotZ").textContent = s.camRotZ + "°";
-
-        bSpreadSelect.innerHTML = "";
+      if (bSpreadSelect) {
+        bSpreadSelect.innerHTML = '';
         storyData.spreads.forEach((sp, idx) => {
-          const opt = document.createElement("option");
+          const opt = document.createElement('option');
           opt.value = idx;
-          opt.textContent = `${idx + 1}. ${sp.title}`;
+          opt.textContent = `${idx + 1}. ${sp.title || 'Глава'}`;
+          if (idx === currentSpreadIdx) opt.selected = true;
           bSpreadSelect.appendChild(opt);
         });
-        bSpreadSelect.value = currentSpreadIdx;
-
-        const spread = storyData.spreads[currentSpreadIdx];
-        if (!spread) return;
-        bSpreadTitle.value = spread.title || "";
-        bTransitionImgInput.value = spread.transitionImg || "transition-1.png";
-        bLayoutSelect.value = spread.layout || "layout-1";
-        bBackdropMaskSelect.value = spread.backdropMask || "arch";
-
-        const selSlotKey = bSlotSelect.value || "front-left";
-        const slotObj = spread.slots[selSlotKey] || { img: "", speaker: "", custom: null };
-        bSlotImg.value = slotObj.img || "";
-        bSlotSpeakerName.value = slotObj.speaker || "";
-
-        const geom = getSlotResolvedGeometry(spread, selSlotKey);
-        bSlotScaleInput.value = geom.scale || 1;
-        bSlotXInput.value = geom.x;
-        bSlotYInput.value = geom.y;
-        bSlotWInput.value = geom.w;
-        bSlotHInput.value = geom.h;
-
-        document.getElementById("valSlotScale").textContent = Number(geom.scale || 1).toFixed(2);
-        document.getElementById("valSlotX").textContent = Math.round(geom.x);
-        document.getElementById("valSlotY").textContent = Math.round(geom.y);
-        document.getElementById("valSlotW").textContent = Math.round(geom.w);
-        document.getElementById("valSlotH").textContent = Math.round(geom.h);
-
-        bStepSelect.innerHTML = "";
-        spread.steps.forEach((st, idx) => {
-          const opt = document.createElement("option");
-          opt.value = idx;
-          opt.textContent = `Шаг ${idx + 1}`;
-          bStepSelect.appendChild(opt);
-        });
-        bStepSelect.value = currentStepIdx;
-
-        const step = spread.steps[currentStepIdx];
-        if (!step) return;
-        bStepText.value = step.text || "";
-        bStepMoodSelect.value = step.mood || "frost";
-        bStepFireflySelect.value = step.fireflyTarget || "front-left";
-
-        const actKey = bActorSlotSelect.value || "front-left";
-        const act = (step.actors && step.actors[actKey]) || {
-          visible: true,
-          flip: false,
-          speech: "",
-          anim: "idle",
-          dx: 0,
-          dy: 0,
-          scale: 1
-        };
-        bActorVisible.checked = !!act.visible;
-        bActorFlip.checked = !!act.flip;
-        bActorSpeech.value = act.speech || "";
-        bActorAnim.value = act.anim || "idle";
-        bActorDx.value = act.dx || 0;
-        bActorDy.value = act.dy || 0;
-        bActorScale.value = act.scale || 1;
-
-        document.getElementById("valActDx").textContent = act.dx || 0;
-        document.getElementById("valActDy").textContent = act.dy || 0;
-        document.getElementById("valActScale").textContent = Number(act.scale || 1).toFixed(2);
       }
 
-      if (builderToggleBtn && builderDrawer) {
-        builderToggleBtn.addEventListener("click", () => {
-          builderDrawer.classList.toggle("is-open");
-          syncBuilderUI();
-        });
-        builderCloseBtn.addEventListener("click", () => {
-          builderDrawer.classList.remove("is-open");
-        });
+      const spread = storyData.spreads[currentSpreadIdx];
+      if (!spread) return;
 
-        document.querySelectorAll(".builder-tab-btn").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            document.querySelectorAll(".builder-tab-btn").forEach((b) => b.classList.remove("is-active"));
-            document.querySelectorAll(".builder-tab-pane").forEach((p) => p.classList.remove("is-active"));
-            btn.classList.add("is-active");
-            const pane = document.getElementById(btn.getAttribute("data-tab"));
-            if (pane) pane.classList.add("is-active");
-          });
-        });
+      if (bSpreadTitle) bSpreadTitle.value = spread.title || '';
+      if (bTransitionImgInput) bTransitionImgInput.value = spread.transitionImg || '';
+      if (bLayoutSelect) bLayoutSelect.value = spread.layout || 'layout-1';
+      if (bBackdropMaskSelect) bBackdropMaskSelect.value = spread.backdropMask || 'arch';
 
-        [bZoomSlider, bPopBoostSlider, bCamRotXSlider, bCamRotZSlider].forEach((el) => {
-          el.addEventListener("input", () => {
-            storyData.settings.zoom = parseFloat(bZoomSlider.value);
-            storyData.settings.popBoost = parseFloat(bPopBoostSlider.value);
-            storyData.settings.camRotX = parseInt(bCamRotXSlider.value, 10);
-            storyData.settings.camRotZ = parseInt(bCamRotZSlider.value, 10);
-            applyBookSettings();
-            renderActiveStep({ animateFootprints: false });
-            syncBuilderUI();
-          });
-        });
+      const selSlotKey = bSlotSelect ? bSlotSelect.value : 'front-left';
+      const slotCfg = spread.slots[selSlotKey] || { img: '', speaker: '', custom: null };
+      if (bSlotImg) bSlotImg.value = slotCfg.img || '';
+      if (bSlotSpeakerName) bSlotSpeakerName.value = slotCfg.speaker || '';
 
-        bAuraSelect.addEventListener("change", () => {
+      const geom = getSlotGeometry(spread, selSlotKey);
+      if (bSlotXInput) bSlotXInput.value = geom.x;
+      if (bSlotYInput) bSlotYInput.value = geom.y;
+      if (bSlotWInput) bSlotWInput.value = geom.w;
+      if (bSlotHInput) bSlotHInput.value = geom.h;
+      if (bSlotScaleInput) bSlotScaleInput.value = geom.scale;
+
+      if (bStepSelect) {
+        bStepSelect.innerHTML = '';
+        spread.steps.forEach((st, sIdx) => {
+          const opt = document.createElement('option');
+          opt.value = sIdx;
+          opt.textContent = `Шаг ${sIdx + 1}`;
+          if (sIdx === currentStepIdx) opt.selected = true;
+          bStepSelect.appendChild(opt);
+        });
+      }
+
+      const step = spread.steps[currentStepIdx];
+      if (!step) return;
+
+      if (bStepText) bStepText.value = step.text || '';
+      if (bStepMoodSelect) bStepMoodSelect.value = step.mood || 'frost';
+      if (bStepFireflySelect) bStepFireflySelect.value = step.fireflyTarget || 'front-left';
+
+      const actorKey = bActorSlotSelect ? bActorSlotSelect.value : 'front-left';
+      const actCfg = (step.actors && step.actors[actorKey]) || {
+        visible: true, flip: false, speech: '', anim: 'idle', dx: 0, dy: 0, scale: 1
+      };
+
+      if (bActorVisible) bActorVisible.checked = !!actCfg.visible;
+      if (bActorFlip) bActorFlip.checked = !!actCfg.flip;
+      if (bActorSpeech) bActorSpeech.value = actCfg.speech || '';
+      if (bActorAnim) bActorAnim.value = actCfg.anim || 'idle';
+      if (bActorDx) bActorDx.value = actCfg.dx || 0;
+      if (bActorDy) bActorDy.value = actCfg.dy || 0;
+      if (bActorScale) bActorScale.value = actCfg.scale ?? 1;
+    }
+
+    if (builderToggleBtn && builderDrawer) {
+      builderToggleBtn.addEventListener('click', () => {
+        builderDrawer.classList.toggle('is-open');
+        syncBuilderSelectsAndInputs();
+      });
+      if (builderCloseBtn) {
+        builderCloseBtn.addEventListener('click', () => {
+          builderDrawer.classList.remove('is-open');
+        });
+      }
+
+      const tabBtns = builderDrawer.querySelectorAll('.builder-tab-btn');
+      const tabPanes = builderDrawer.querySelectorAll('.builder-tab-pane');
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.getAttribute('data-tab');
+          tabBtns.forEach(b => b.classList.toggle('is-active', b === btn));
+          tabPanes.forEach(p => p.classList.toggle('is-active', p.id === targetId));
+        });
+      });
+
+      [bZoomSlider, bPopBoostSlider, bCamRotXSlider, bCamRotZSlider].forEach(el => {
+        if (!el) return;
+        el.addEventListener('input', () => {
+          storyData.settings.zoom = parseFloat(bZoomSlider.value) || 1;
+          storyData.settings.popBoost = parseFloat(bPopBoostSlider.value) || 1;
+          storyData.settings.camRotX = parseFloat(bCamRotXSlider.value) || 0;
+          storyData.settings.camRotZ = parseFloat(bCamRotZSlider.value) || 0;
+          applyGlobalBookSettings();
+        });
+      });
+      if (bAuraSelect) {
+        bAuraSelect.addEventListener('change', () => {
           storyData.settings.aura = bAuraSelect.value;
-          applyBookSettings();
+          applyGlobalBookSettings();
         });
-
-        [bRoomTexInput, bCoverTexInput, bPaperTexInput].forEach((el) => {
-          el.addEventListener("input", () => {
-            storyData.settings.roomTex = bRoomTexInput.value.trim();
-            storyData.settings.coverTex = bCoverTexInput.value.trim();
-            storyData.settings.paperTex = bPaperTexInput.value.trim();
-            applyBookSettings();
-          });
+      }
+      [bRoomTexInput, bCoverTexInput, bPaperTexInput].forEach(el => {
+        if (!el) return;
+        el.addEventListener('input', () => {
+          storyData.settings.roomTex = bRoomTexInput.value.trim();
+          storyData.settings.coverTex = bCoverTexInput.value.trim();
+          storyData.settings.paperTex = bPaperTexInput.value.trim();
+          applyGlobalBookSettings();
         });
+      });
 
-        bSpreadSelect.addEventListener("change", () => {
+      if (bSpreadSelect) {
+        bSpreadSelect.addEventListener('change', () => {
           currentSpreadIdx = parseInt(bSpreadSelect.value, 10) || 0;
           currentStepIdx = 0;
-          renderActiveStep({ animateFootprints: false });
-          syncBuilderUI();
+          renderActiveStep({ resetFootprints: true });
         });
-
-        bAddSpreadBtn.addEventListener("click", () => {
+      }
+      if (bAddSpreadBtn) {
+        bAddSpreadBtn.addEventListener('click', () => {
           const clone = JSON.parse(JSON.stringify(storyData.spreads[currentSpreadIdx]));
-          clone.id = "spread-" + Date.now();
           clone.title = `Глава ${storyData.spreads.length + 1}`;
           storyData.spreads.push(clone);
           currentSpreadIdx = storyData.spreads.length - 1;
           currentStepIdx = 0;
-          renderActiveStep({ animateFootprints: false });
-          syncBuilderUI();
+          renderActiveStep({ resetFootprints: true });
         });
-
-        bDelSpreadBtn.addEventListener("click", () => {
+      }
+      if (bDelSpreadBtn) {
+        bDelSpreadBtn.addEventListener('click', () => {
           if (storyData.spreads.length <= 1) return;
           storyData.spreads.splice(currentSpreadIdx, 1);
           currentSpreadIdx = Math.max(0, currentSpreadIdx - 1);
           currentStepIdx = 0;
-          renderActiveStep({ animateFootprints: false });
-          syncBuilderUI();
+          renderActiveStep({ resetFootprints: true });
         });
-
-        bSpreadTitle.addEventListener("input", () => {
+      }
+      if (bSpreadTitle) {
+        bSpreadTitle.addEventListener('input', () => {
           storyData.spreads[currentSpreadIdx].title = bSpreadTitle.value;
-          renderActiveStep({ animateFootprints: false });
-          syncBuilderUI();
+          renderActiveStep();
         });
-
-        bTransitionImgInput.addEventListener("input", () => {
+      }
+      if (bTransitionImgInput) {
+        bTransitionImgInput.addEventListener('input', () => {
           storyData.spreads[currentSpreadIdx].transitionImg = bTransitionImgInput.value.trim();
         });
-
-        bLayoutSelect.addEventListener("change", () => {
+      }
+      if (bLayoutSelect) {
+        bLayoutSelect.addEventListener('change', () => {
           storyData.spreads[currentSpreadIdx].layout = bLayoutSelect.value;
-          renderActiveStep({ animateFootprints: false });
-          syncBuilderUI();
+          renderActiveStep({ resetFootprints: true });
         });
-
-        bBackdropMaskSelect.addEventListener("change", () => {
+      }
+      if (bBackdropMaskSelect) {
+        bBackdropMaskSelect.addEventListener('change', () => {
           storyData.spreads[currentSpreadIdx].backdropMask = bBackdropMaskSelect.value;
-          renderActiveStep({ animateFootprints: false });
+          renderActiveStep();
         });
-
-        bSlotSelect.addEventListener("change", syncBuilderUI);
-
-        bSlotImg.addEventListener("input", () => {
-          const k = bSlotSelect.value;
-          storyData.spreads[currentSpreadIdx].slots[k].img = bSlotImg.value.trim();
-          renderActiveStep({ animateFootprints: false });
+      }
+      if (bSlotSelect) {
+        bSlotSelect.addEventListener('change', syncBuilderSelectsAndInputs);
+      }
+      if (bSlotImg) {
+        bSlotImg.addEventListener('input', () => {
+          const sKey = bSlotSelect.value;
+          storyData.spreads[currentSpreadIdx].slots[sKey].img = bSlotImg.value.trim();
+          renderActiveStep();
         });
-
-        bSlotSpeakerName.addEventListener("input", () => {
-          const k = bSlotSelect.value;
-          storyData.spreads[currentSpreadIdx].slots[k].speaker = bSlotSpeakerName.value;
-          renderActiveStep({ animateFootprints: false });
+      }
+      if (bSlotSpeakerName) {
+        bSlotSpeakerName.addEventListener('input', () => {
+          const sKey = bSlotSelect.value;
+          storyData.spreads[currentSpreadIdx].slots[sKey].speaker = bSlotSpeakerName.value;
+          renderActiveStep();
         });
-
-        bSwapBtn.addEventListener("click", () => {
-          const k1 = bSlotSelect.value;
-          const k2 = bSwapTargetSelect.value;
-          if (k1 === "bg" || k2 === "bg" || k1 === k2) return;
-          const sp = storyData.spreads[currentSpreadIdx];
-          const tmp = sp.slots[k1];
-          sp.slots[k1] = sp.slots[k2];
-          sp.slots[k2] = tmp;
-          renderActiveStep({ animateFootprints: false });
-          syncBuilderUI();
+      }
+      if (bSwapBtn) {
+        bSwapBtn.addEventListener('click', () => {
+          const sA = bSlotSelect.value;
+          const sB = bSwapTargetSelect.value;
+          if (sA === 'bg' || sB === 'bg' || sA === sB) return;
+          const slots = storyData.spreads[currentSpreadIdx].slots;
+          const temp = slots[sA];
+          slots[sA] = slots[sB];
+          slots[sB] = temp;
+          renderActiveStep();
         });
-
-        [bSlotScaleInput, bSlotXInput, bSlotYInput, bSlotWInput, bSlotHInput].forEach((el) => {
-          el.addEventListener("input", () => {
-            const k = bSlotSelect.value;
-            const sp = storyData.spreads[currentSpreadIdx];
-            sp.slots[k].custom = {
-              scale: parseFloat(bSlotScaleInput.value),
-              x: parseInt(bSlotXInput.value, 10),
-              y: parseInt(bSlotYInput.value, 10),
-              w: parseInt(bSlotWInput.value, 10),
-              h: parseInt(bSlotHInput.value, 10)
-            };
-            renderActiveStep({ animateFootprints: false });
-            syncBuilderUI();
-          });
-        });
-
-        bResetSlotCustomBtn.addEventListener("click", () => {
-          const k = bSlotSelect.value;
-          storyData.spreads[currentSpreadIdx].slots[k].custom = null;
-          renderActiveStep({ animateFootprints: false });
-          syncBuilderUI();
-        });
-
-        bStepSelect.addEventListener("change", () => {
-          currentStepIdx = parseInt(bStepSelect.value, 10) || 0;
-          renderActiveStep({ animateFootprints: false });
-          syncBuilderUI();
-        });
-
-        bAddStepBtn.addEventListener("click", () => {
-          const sp = storyData.spreads[currentSpreadIdx];
-          const cloneStep = JSON.parse(JSON.stringify(sp.steps[currentStepIdx]));
-          sp.steps.push(cloneStep);
-          currentStepIdx = sp.steps.length - 1;
-          renderActiveStep({ animateFootprints: false });
-          syncBuilderUI();
-        });
-
-        bDelStepBtn.addEventListener("click", () => {
-          const sp = storyData.spreads[currentSpreadIdx];
-          if (sp.steps.length <= 1) return;
-          sp.steps.splice(currentStepIdx, 1);
-          currentStepIdx = Math.max(0, currentStepIdx - 1);
-          renderActiveStep({ animateFootprints: false });
-          syncBuilderUI();
-        });
-
-        bStepText.addEventListener("input", () => {
-          storyData.spreads[currentSpreadIdx].steps[currentStepIdx].text = bStepText.value;
-          renderActiveStep({ animateFootprints: false });
-        });
-
-        bStepMoodSelect.addEventListener("change", () => {
-          storyData.spreads[currentSpreadIdx].steps[currentStepIdx].mood = bStepMoodSelect.value;
-          renderActiveStep({ animateFootprints: false });
-        });
-
-        bStepFireflySelect.addEventListener("change", () => {
-          storyData.spreads[currentSpreadIdx].steps[currentStepIdx].fireflyTarget = bStepFireflySelect.value;
-          renderActiveStep({ animateFootprints: false });
-        });
-
-        bActorSlotSelect.addEventListener("change", syncBuilderUI);
-
-        function updateCurrentActorFromInputs() {
-          const sp = storyData.spreads[currentSpreadIdx];
-          const step = sp.steps[currentStepIdx];
-          const actKey = bActorSlotSelect.value;
-          step.actors[actKey] = {
-            visible: bActorVisible.checked,
-            flip: bActorFlip.checked,
-            speech: bActorSpeech.value,
-            anim: bActorAnim.value,
-            dx: parseInt(bActorDx.value, 10) || 0,
-            dy: parseInt(bActorDy.value, 10) || 0,
-            scale: parseFloat(bActorScale.value) || 1
+      }
+      [bSlotXInput, bSlotYInput, bSlotWInput, bSlotHInput, bSlotScaleInput].forEach(el => {
+        if (!el) return;
+        el.addEventListener('input', () => {
+          const sKey = bSlotSelect.value;
+          storyData.spreads[currentSpreadIdx].slots[sKey].custom = {
+            x: parseFloat(bSlotXInput.value) || 0,
+            y: parseFloat(bSlotYInput.value) || 0,
+            w: parseFloat(bSlotWInput.value) || 100,
+            h: parseFloat(bSlotHInput.value) || 100,
+            scale: parseFloat(bSlotScaleInput.value) || 1
           };
-          renderActiveStep({ animateFootprints: false });
-          syncBuilderUI();
-        }
-
-        [bActorVisible, bActorFlip, bActorAnim].forEach((el) => {
-          el.addEventListener("change", updateCurrentActorFromInputs);
+          renderActiveStep();
         });
-        [bActorSpeech, bActorDx, bActorDy, bActorScale].forEach((el) => {
-          el.addEventListener("input", updateCurrentActorFromInputs);
-        });
-
-        exportHtmlBtn.addEventListener("click", () => {
-          const docClone = document.documentElement.cloneNode(true);
-
-          const toggleClone = docClone.querySelector("#builderToggleBtn");
-          if (toggleClone) toggleClone.remove();
-          const drawerClone = docClone.querySelector("#builderDrawer");
-          if (drawerClone) drawerClone.remove();
-
-          const stageClone = docClone.querySelector("#shadowboxStage");
-          if (stageClone) {
-            stageClone.classList.remove("is-open", "is-finished");
-            stageClone.setAttribute("data-mood", "frost");
-          }
-          const ctaClone = docClone.querySelector("#closedCoverCta");
-          if (ctaClone) ctaClone.classList.remove("is-hidden");
-
-          const readerClone = docClone.querySelector("#storyReaderPanel");
-          if (readerClone) readerClone.classList.remove("is-active");
-
-          const transClone = docClone.querySelector("#chapterTransitionOverlay");
-          if (transClone) transClone.classList.remove("is-active");
-
-          const finaleClone = docClone.querySelector("#storyFinaleOverlay");
-          if (finaleClone) finaleClone.classList.remove("is-visible");
-
-          const scriptEl = docClone.querySelector("#fairytaleEngineScript");
-          if (scriptEl) {
-            const serialized = JSON.stringify(storyData, null, 2);
-            scriptEl.textContent = scriptEl.textContent.replace(
-              /const INITIAL_STORY_STATE = [\s\S]*?;\n\s*let storyData/,
-              `const INITIAL_STORY_STATE = ${serialized};\n      let storyData`
-            );
-          }
-
-          const finalHtml = "<!DOCTYPE html>\n" + docClone.outerHTML;
-          const blob = new Blob([finalHtml], { type: "text/html;charset=utf-8" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "index.html";
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          URL.revokeObjectURL(url);
+      });
+      if (bResetSlotCustomBtn) {
+        bResetSlotCustomBtn.addEventListener('click', () => {
+          const sKey = bSlotSelect.value;
+          storyData.spreads[currentSpreadIdx].slots[sKey].custom = null;
+          renderActiveStep();
         });
       }
 
-      preloadAndDecodeAssets();
-      applyBookSettings();
-      renderActiveStep({ animateFootprints: false });
-      syncBuilderUI();
-    })();
+      if (bStepSelect) {
+        bStepSelect.addEventListener('change', () => {
+          currentStepIdx = parseInt(bStepSelect.value, 10) || 0;
+          renderActiveStep();
+        });
+      }
+      if (bAddStepBtn) {
+        bAddStepBtn.addEventListener('click', () => {
+          const steps = storyData.spreads[currentSpreadIdx].steps;
+          const clone = JSON.parse(JSON.stringify(steps[currentStepIdx]));
+          steps.push(clone);
+          currentStepIdx = steps.length - 1;
+          renderActiveStep();
+        });
+      }
+      if (bDelStepBtn) {
+        bDelStepBtn.addEventListener('click', () => {
+          const steps = storyData.spreads[currentSpreadIdx].steps;
+          if (steps.length <= 1) return;
+          steps.splice(currentStepIdx, 1);
+          currentStepIdx = Math.max(0, currentStepIdx - 1);
+          renderActiveStep();
+        });
+      }
+      if (bStepText) {
+        bStepText.addEventListener('input', () => {
+          storyData.spreads[currentSpreadIdx].steps[currentStepIdx].text = bStepText.value;
+          renderActiveStep();
+        });
+      }
+      if (bStepMoodSelect) {
+        bStepMoodSelect.addEventListener('change', () => {
+          storyData.spreads[currentSpreadIdx].steps[currentStepIdx].mood = bStepMoodSelect.value;
+          renderActiveStep();
+        });
+      }
+      if (bStepFireflySelect) {
+        bStepFireflySelect.addEventListener('change', () => {
+          storyData.spreads[currentSpreadIdx].steps[currentStepIdx].fireflyTarget = bStepFireflySelect.value;
+          renderActiveStep();
+        });
+      }
+      if (bActorSlotSelect) {
+        bActorSlotSelect.addEventListener('change', syncBuilderSelectsAndInputs);
+      }
+
+      function updateCurrentStepActor() {
+        const aKey = bActorSlotSelect.value;
+        const step = storyData.spreads[currentSpreadIdx].steps[currentStepIdx];
+        if (!step.actors[aKey]) step.actors[aKey] = {};
+        step.actors[aKey].visible = bActorVisible.checked;
+        step.actors[aKey].flip = bActorFlip.checked;
+        step.actors[aKey].speech = bActorSpeech.value;
+        step.actors[aKey].anim = bActorAnim.value;
+        step.actors[aKey].dx = parseFloat(bActorDx.value) || 0;
+        step.actors[aKey].dy = parseFloat(bActorDy.value) || 0;
+        step.actors[aKey].scale = parseFloat(bActorScale.value) || 1;
+        renderActiveStep();
+      }
+      [bActorVisible, bActorFlip, bActorSpeech, bActorAnim, bActorDx, bActorDy, bActorScale].forEach(el => {
+        if (!el) return;
+        el.addEventListener('input', updateCurrentStepActor);
+        el.addEventListener('change', updateCurrentStepActor);
+      });
+
+      /* Чистый экспорт без конструктора и в исходном закрытом состоянии */
+      if (exportHtmlBtn) {
+        exportHtmlBtn.addEventListener('click', () => {
+          const cloneDoc = document.documentElement.cloneNode(true);
+
+          const btnRemove = cloneDoc.querySelector('#builderToggleBtn');
+          const drawerRemove = cloneDoc.querySelector('#builderDrawer');
+          if (btnRemove) btnRemove.remove();
+          if (drawerRemove) drawerRemove.remove();
+
+          const stageClone = cloneDoc.querySelector('#shadowboxStage');
+          if (stageClone) {
+            stageClone.classList.remove('is-open', 'is-finished', 'is-occluded');
+            stageClone.setAttribute('data-mood', 'frost');
+          }
+          const ctaClone = cloneDoc.querySelector('#closedCoverCta');
+          if (ctaClone) ctaClone.classList.remove('is-hidden');
+
+          const hudClone = cloneDoc.querySelector('#storyReaderPanel');
+          if (hudClone) hudClone.classList.remove('is-active');
+
+          const narratorClone = cloneDoc.querySelector('#narratorDrawer');
+          if (narratorClone) narratorClone.classList.add('is-hidden-for-dialogue');
+
+          const preludeClone = cloneDoc.querySelector('#chapterPreludeVeil');
+          if (preludeClone) preludeClone.classList.remove('is-active');
+
+          const transClone = cloneDoc.querySelector('#chapterTransitionOverlay');
+          if (transClone) transClone.classList.remove('is-active', 'is-fading-out');
+
+          const finaleClone = cloneDoc.querySelector('#storyFinaleOverlay');
+          if (finaleClone) finaleClone.classList.remove('is-visible');
+
+          const fpClone = cloneDoc.querySelector('#footprintsLayer');
+          if (fpClone) fpClone.innerHTML = '';
+
+          cloneDoc.querySelectorAll('.standee-speech-bubble').forEach(b => b.classList.remove('is-visible'));
+
+          const dataScript = document.createElement('script');
+          dataScript.textContent = `window.__EXPORTED_STORY_DATA__ = ${JSON.stringify(storyData, null, 2)};`;
+          const mainScript = cloneDoc.querySelector('#fairytaleLogicScript');
+          if (mainScript && mainScript.parentNode) {
+            mainScript.parentNode.insertBefore(dataScript, mainScript);
+          }
+
+          const finalHtml = '<!DOCTYPE html>\n' + cloneDoc.outerHTML;
+          const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'index.html';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+      }
+    }
+
+    preloadAndDecodeAssets();
+    applyGlobalBookSettings();
+    renderActiveStep({ isInitialOpen: true, resetFootprints: true, instantSilentSwap: true });
+    initMagicCanvasEngine();
+    syncBuilderSelectsAndInputs();
+  })();
   </script>
 </body>
 </html>
